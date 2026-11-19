@@ -1,9 +1,10 @@
+== clustered hf
 /home/user/hongjie-qiu/backtest/data/panel_hf 2005-01-03..None
 setup                                         n     avgR  t naive  t month-clustered   avgRet  t ret clustered  months
-Breakout Q0                                1463   -0.062     -1.6               -1.5   -0.44%             -1.1     201
-Breakout close-confirmed                    911   -0.204     -3.9               -3.7   -1.15%             -2.6     186
+Breakout Q0                                1478   -0.070     -1.9               -1.6   -0.51%             -1.3     203
+Breakout close-confirmed                    918   -0.210     -4.0               -3.8   -1.19%             -2.7     189
 EP close entry, standard rules             4538   -0.111     -5.2               -3.6   -1.19%             -4.2     263
 Earnings EP, standard rules                2215   -0.052     -1.9               -1.4   -0.24%             -1.0     249
-Earnings EP, 50-day trail                  2198   +0.250     +3.2               +2.5   +1.22%             +2.1     249
-Parabolic short, next open, +30% stop      1570   +0.171     +6.5               +5.8   +5.14%             +5.8     194
-Parabolic short, first red day             1361   +0.047     +1.6               +1.3   +2.18%             +2.4     194
+Earnings EP, 50-day trail                  2198   +0.248     +3.1               +2.5   +1.21%             +2.1     249
+Parabolic short, next open, +30% stop      1609   +0.147     +5.7               +5.1   +4.42%             +5.1     194
+Parabolic short, first red day             1366   +0.072     +2.8               +2.3   +1.97%             +2.2     194

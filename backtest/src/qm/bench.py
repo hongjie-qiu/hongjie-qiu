@@ -3,18 +3,27 @@ import numpy as np
 
 
 def nasdaq_proxy(p):
-    """QQQ close; the snapshot's QQQ series stops in Sep 2026, so later days are spliced from QQQM returns."""
+    """QQQ close for the regime filter.
+
+    The main snapshot's QQQ series stops on 2026-09-11.  Later sessions are spliced from QQQM returns
+    when that column exists, otherwise from SPY returns (an approximation used only to keep the
+    10/20-day regime filter defined for the last few weeks of the sample).
+    """
     C = np.asarray(p["close"])
     q = C[:, p["col"]["QQQ"]].astype(np.float64).copy()
-    if "QQQM" in p["col"]:
-        q2 = C[:, p["col"]["QQQM"]].astype(np.float64)
-        valid = np.where(np.isfinite(q))[0]
-        last = valid[-1]
-        for i in range(last + 1, len(q)):
-            if np.isfinite(q2[i]) and np.isfinite(q2[i - 1]):
-                q[i] = q[i - 1] * q2[i] / q2[i - 1]
-            else:
-                q[i] = q[i - 1]
+    alt = "QQQM" if "QQQM" in p["col"] else "SPY"
+    q2 = C[:, p["col"][alt]].astype(np.float64)
+    valid = np.where(np.isfinite(q))[0]
+    last = valid[-1]
+    for i in range(last + 1, len(q)):
+        if np.isfinite(q2[i]) and np.isfinite(q2[i - 1]) and q2[i - 1] > 0:
+            q[i] = q[i - 1] * q2[i] / q2[i - 1]
+        else:
+            q[i] = q[i - 1]
+    # holes inside the series: carry the last value forward
+    for i in range(valid[0] + 1, last):
+        if not np.isfinite(q[i]):
+            q[i] = q[i - 1]
     return q
 
 

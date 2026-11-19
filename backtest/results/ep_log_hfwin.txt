@@ -1,34 +1,35 @@
+== ep hfwin
 earnings flags: {'filings': 458349, 'matched': 278079, 'source': 'SEC 8-K item 2.02'}
 
 === Event study: every gap-up >= 10% in a liquid common stock; returns after the gap-day CLOSE, minus SPY ===
-all gaps >= 10%                                      n= 11382  open->close -0.79% | +1d xs -0.23% (med -0.56%, t~-3.7) | +5d xs -1.55% (med -2.07%, t~-3.3) | +20d xs -3.21% (med -4.42%, t~-4.5) | +60d xs -1.88% (med -8.36%, t~-1.1)
-volume >= 3x and day $vol >= 10M                     n=  6686  open->close +0.70% | +1d xs -0.38% (med -0.64%, t~-2.7) | +5d xs -2.14% (med -2.05%, t~-5.5) | +20d xs -4.41% (med -4.59%, t~-4.7) | +60d xs -4.82% (med -9.54%, t~-1.6)
+all gaps >= 10%                                      n= 11386  open->close -0.79% | +1d xs -0.24% (med -0.56%, t~-3.7) | +5d xs -1.58% (med -2.07%, t~-3.4) | +20d xs -3.24% (med -4.42%, t~-4.5) | +60d xs -1.91% (med -8.39%, t~-1.1)
+volume >= 3x and day $vol >= 10M                     n=  6688  open->close +0.70% | +1d xs -0.39% (med -0.64%, t~-2.7) | +5d xs -2.16% (med -2.05%, t~-5.5) | +20d xs -4.43% (med -4.59%, t~-4.7) | +60d xs -4.85% (med -9.58%, t~-1.6)
   ... and close >= open, top half of range           n=  2644  open->close +12.09% | +1d xs -0.15% (med -0.50%, t~-0.4) | +5d xs -1.97% (med -1.42%, t~-4.6) | +20d xs -2.72% (med -2.69%, t~-2.6) | +60d xs -2.36% (med -7.04%, t~-0.3)
-  ... and close < open (faded)                       n=  3323  open->close -9.34% | +1d xs -0.69% (med -0.84%, t~-2.4) | +5d xs -2.43% (med -2.64%, t~-3.6) | +20d xs -5.41% (med -6.26%, t~-3.9) | +60d xs -6.30% (med -11.61%, t~-1.4)
+  ... and close < open (faded)                       n=  3324  open->close -9.36% | +1d xs -0.70% (med -0.84%, t~-2.4) | +5d xs -2.44% (med -2.64%, t~-3.6) | +20d xs -5.42% (med -6.26%, t~-3.9) | +60d xs -6.32% (med -11.66%, t~-1.4)
   earnings reaction day                              n=  2393  open->close +1.59% | +1d xs -0.02% (med -0.14%, t~-0.4) | +5d xs -0.41% (med -0.76%, t~-0.5) | +20d xs -0.12% (med -0.59%, t~-0.5) | +60d xs -0.33% (med -3.73%, t~-0.2)
-  not an earnings day                                n=  4293  open->close +0.21% | +1d xs -0.58% (med -1.10%, t~-2.7) | +5d xs -3.10% (med -3.69%, t~-6.2) | +20d xs -6.80% (med -8.16%, t~-5.2) | +60d xs -7.35% (med -14.94%, t~-1.4)
+  not an earnings day                                n=  4295  open->close +0.20% | +1d xs -0.60% (med -1.10%, t~-2.8) | +5d xs -3.13% (med -3.71%, t~-6.3) | +20d xs -6.83% (med -8.16%, t~-5.2) | +60d xs -7.39% (med -14.96%, t~-1.4)
   earnings + close>=open, top half of range          n=  1122  open->close +8.35% | +1d xs -0.04% (med +0.01%, t~-1.5) | +5d xs -0.75% (med -0.93%, t~-2.7) | +20d xs -0.15% (med -0.77%, t~-0.8) | +60d xs -1.09% (med -4.04%, t~-0.6)
-  gap 10-20%                                         n=  4424  open->close +1.59% | +1d xs +0.15% (med -0.41%, t~+0.2) | +5d xs -1.05% (med -1.55%, t~-3.1) | +20d xs -2.41% (med -3.60%, t~-3.1) | +60d xs -1.90% (med -7.32%, t~-0.9)
+  gap 10-20%                                         n=  4425  open->close +1.57% | +1d xs +0.14% (med -0.41%, t~+0.2) | +5d xs -1.06% (med -1.55%, t~-3.1) | +20d xs -2.42% (med -3.61%, t~-3.1) | +60d xs -1.92% (med -7.34%, t~-0.9)
   gap 20-40%                                         n=  1675  open->close +0.05% | +1d xs -0.94% (med -0.88%, t~-3.1) | +5d xs -3.50% (med -2.84%, t~-7.2) | +20d xs -5.56% (med -5.28%, t~-3.0) | +60d xs -8.36% (med -11.99%, t~-1.8)
-  gap 40-inf%                                        n=   587  open->close -4.09% | +1d xs -2.77% (med -3.09%, t~-1.5) | +5d xs -6.45% (med -8.21%, t~-2.8) | +20d xs -16.17% (med -16.45%, t~-4.6) | +60d xs -17.09% (med -28.58%, t~-1.0)
+  gap 40-inf%                                        n=   588  open->close -3.99% | +1d xs -2.85% (med -3.10%, t~-1.6) | +5d xs -6.59% (med -8.23%, t~-2.9) | +20d xs -16.30% (med -16.61%, t~-4.7) | +60d xs -17.24% (med -28.58%, t~-1.0)
   'neglected': prior 6m return in [-30%, +30%]       n=  2865  open->close +0.99% | +1d xs -0.00% (med -0.35%, t~-0.5) | +5d xs -0.76% (med -1.04%, t~-2.9) | +20d xs -1.81% (med -2.15%, t~-2.8) | +60d xs -2.56% (med -5.42%, t~-1.0)
-  extended: prior 6m return > +50%                   n=  1748  open->close +0.10% | +1d xs -0.24% (med -0.94%, t~-0.4) | +5d xs -3.12% (med -4.92%, t~-2.9) | +20d xs -6.54% (med -10.53%, t~-2.7) | +60d xs -7.08% (med -18.86%, t~-0.6)
+  extended: prior 6m return > +50%                   n=  1750  open->close +0.09% | +1d xs -0.29% (med -0.96%, t~-0.6) | +5d xs -3.20% (med -4.94%, t~-3.1) | +20d xs -6.62% (med -10.53%, t~-2.8) | +60d xs -7.18% (med -18.91%, t~-0.7)
   beaten down: prior 6m return < -30%                n=  1302  open->close +0.92% | +1d xs -0.95% (med -1.53%, t~-2.4) | +5d xs -3.49% (med -3.61%, t~-4.7) | +20d xs -6.65% (med -6.55%, t~-3.6) | +60d xs -4.85% (med -10.07%, t~-1.6)
-  volume >= 10x                                      n=  1813  open->close +2.83% | +1d xs -1.41% (med -1.43%, t~-2.0) | +5d xs -4.68% (med -4.79%, t~-6.0) | +20d xs -8.45% (med -8.87%, t~-3.9) | +60d xs -14.23% (med -19.80%, t~-2.9)
+  volume >= 10x                                      n=  1812  open->close +2.83% | +1d xs -1.41% (med -1.43%, t~-2.0) | +5d xs -4.67% (med -4.78%, t~-6.0) | +20d xs -8.44% (med -8.86%, t~-3.8) | +60d xs -14.21% (med -19.73%, t~-2.8)
   2005-2012                                          n=     0  (too few)
     earnings only 2005-2012                          n=     0  (too few)
   2013-2018                                          n=     0  (too few)
     earnings only 2013-2018                          n=     0  (too few)
   2019-2021                                          n=  2533  open->close -0.02% | +1d xs -0.44% (med -1.03%, t~-2.0) | +5d xs -2.52% (med -3.38%, t~-3.5) | +20d xs -4.25% (med -6.38%, t~-2.0) | +60d xs -1.79% (med -11.23%, t~-0.4)
     earnings only 2019-2021                          n=   616  open->close +1.67% | +1d xs -0.09% (med +0.02%, t~-0.3) | +5d xs -0.37% (med -1.35%, t~+0.5) | +20d xs -0.69% (med -1.18%, t~+0.2) | +60d xs +0.16% (med -3.78%, t~+0.3)
-  2022-2026                                          n=  4153  open->close +1.14% | +1d xs -0.34% (med -0.51%, t~-1.8) | +5d xs -1.91% (med -1.34%, t~-4.2) | +20d xs -4.50% (med -3.69%, t~-4.5) | +60d xs -6.70% (med -8.64%, t~-1.7)
+  2022-2026                                          n=  4155  open->close +1.14% | +1d xs -0.36% (med -0.51%, t~-1.9) | +5d xs -1.94% (med -1.35%, t~-4.3) | +20d xs -4.54% (med -3.69%, t~-4.5) | +60d xs -6.74% (med -8.66%, t~-1.8)
     earnings only 2022-2026                          n=  1777  open->close +1.56% | +1d xs +0.00% (med -0.19%, t~-0.3) | +5d xs -0.43% (med -0.54%, t~-1.5) | +20d xs +0.08% (med -0.49%, t~-0.8) | +60d xs -0.50% (med -3.68%, t~-0.6)
 E-close: vol>=3x, strong close; buy close, LOD stop n=  2551  win= 41.5%  avgR=-0.088  medR=-0.62  avgW=+1.15R  avgL=-0.97R  PF=0.85  t=-2.9  avgRet=-1.28%  top5%=-255%  hold=5.8d  risk=9.1%
     by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.211 (n=842)  2022-2026: -0.027 (n=1709)
 E-close, trail SMA20               n=  2548  win= 41.4%  avgR=-0.060  medR=-0.49  avgW=+1.22R  avgL=-0.96R  PF=0.89  t=-1.7  avgRet=-1.18%  top5%=-451%  hold=7.5d  risk=9.1%
     by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.176 (n=842)  2022-2026: -0.002 (n=1706)
-E-close, trail SMA50, no partial/BE n=  2513  win= 23.8%  avgR=+0.255  medR=-1.03  avgW=+4.46R  avgL=-1.05R  PF=1.32  t=+2.4  avgRet=+1.02%  top5%=283%  hold=18.4d  risk=9.1%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.118 (n=833)  2022-2026: +0.324 (n=1680)
+E-close, trail SMA50, no partial/BE n=  2513  win= 23.8%  avgR=+0.256  medR=-1.03  avgW=+4.46R  avgL=-1.05R  PF=1.32  t=+2.4  avgRet=+1.04%  top5%=283%  hold=18.4d  risk=9.1%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.119 (n=833)  2022-2026: +0.324 (n=1680)
 E-close, earnings only             n=  1121  win= 46.7%  avgR=+0.006  medR=-0.04  avgW=+1.06R  avgL=-0.92R  PF=1.01  t=+0.1  avgRet=-0.02%  top5%=3680%  hold=6.5d  risk=6.7%
     by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.119 (n=276)  2022-2026: +0.047 (n=845)
 E-close, earnings only, trail SMA20 n=  1121  win= 46.4%  avgR=+0.051  medR=-0.04  avgW=+1.16R  avgL=-0.91R  PF=1.10  t=+1.1  avgRet=+0.23%  top5%=518%  hold=8.7d  risk=6.7%
@@ -49,20 +50,18 @@ E-close, cost 0                    n=  2551  win= 46.3%  avgR=-0.039  medR=-0.59
     by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.168 (n=842)  2022-2026: +0.025 (n=1709)
 E-close, cost 30 bp                n=  2551  win= 37.2%  avgR=-0.136  medR=-0.71  avgW=+1.24R  avgL=-0.95R  PF=0.77  t=-4.6  avgRet=-1.57%  top5%=-162%  hold=5.8d  risk=9.1%
     by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.253 (n=842)  2022-2026: -0.079 (n=1709)
-E-open: buy the open, 1xADR stop, day0 close-based n= 10314  win= 35.9%  avgR=+0.125  medR=-1.01  avgW=+2.13R  avgL=-1.00R  PF=1.19  t=+4.5  avgRet=-0.18%  top5%=310%  hold=4.4d  risk=9.5%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.036 (n=4246)  2022-2026: +0.187 (n=6068)
-E-open, day0 pessimistic           n= 10422  win= 30.1%  avgR=-0.059  medR=-1.02  avgW=+2.07R  avgL=-0.98R  PF=0.91  t=-2.9  avgRet=-1.15%  top5%=-579%  hold=3.6d  risk=9.5%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.081 (n=4312)  2022-2026: -0.043 (n=6110)
-E-open, 1.5xADR stop, day0 pessimistic n= 10250  win= 37.4%  avgR=-0.051  medR=-0.57  avgW=+1.32R  avgL=-0.87R  PF=0.91  t=-3.3  avgRet=-1.33%  top5%=-476%  hold=4.7d  risk=14.1%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.077 (n=4221)  2022-2026: -0.033 (n=6029)
-E-open, earnings only, day0 pessimistic n=  3539  win= 30.6%  avgR=+0.000  medR=-1.05  avgW=+2.34R  avgL=-1.03R  PF=1.00  t=+0.0  avgRet=-0.08%  top5%=91012%  hold=3.8d  risk=5.1%
+E-open: buy the open, 1xADR stop (exact) n= 10431  win= 30.1%  avgR=-0.060  medR=-1.02  avgW=+2.07R  avgL=-0.98R  PF=0.91  t=-2.9  avgRet=-1.17%  top5%=-564%  hold=3.6d  risk=9.3%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.082 (n=4315)  2022-2026: -0.045 (n=6116)
+E-open, 1.5xADR stop (exact)       n= 10263  win= 37.4%  avgR=-0.053  medR=-0.59  avgW=+1.32R  avgL=-0.87R  PF=0.90  t=-3.4  avgRet=-1.34%  top5%=-455%  hold=4.7d  risk=13.5%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.078 (n=4225)  2022-2026: -0.036 (n=6038)
+E-open, earnings only (exact)      n=  3539  win= 30.6%  avgR=+0.000  medR=-1.05  avgW=+2.34R  avgL=-1.03R  PF=1.00  t=+0.0  avgRet=-0.07%  top5%=84399%  hold=3.8d  risk=5.1%
     by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.003 (n=935)  2022-2026: -0.001 (n=2604)
-E-orb proxy: buy open+0.25ADR, stop open-0.25ADR, pess. n=  7954  win= 12.1%  avgR=-0.425  medR=-1.08  avgW=+4.60R  avgL=-1.12R  PF=0.57  t=-14.0  avgRet=-1.95%  top5%=-107%  hold=1.4d  risk=4.4%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.379 (n=3211)  2022-2026: -0.456 (n=4743)
-E-orb proxy, day0 close-based      n=  7751  win= 30.8%  avgR=+0.699  medR=-1.06  avgW=+4.97R  avgL=-1.20R  PF=1.84  t=+10.5  avgRet=+1.54%  top5%=114%  hold=3.8d  risk=4.3%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.479 (n=3111)  2022-2026: +0.847 (n=4640)
-E-orb proxy, day0 optimistic       n=  7696  win= 31.7%  avgR=+0.096  medR=-1.09  avgW=+4.99R  avgL=-2.17R  PF=1.07  t=+1.3  avgRet=-0.51%  top5%=842%  hold=4.2d  risk=4.3%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.061 (n=3082)  2022-2026: +0.202 (n=4614)
+E-orb proxy: buy open+0.25ADR, stop open-0.25ADR, worst case n=  7961  win= 12.1%  avgR=-0.427  medR=-1.08  avgW=+4.60R  avgL=-1.12R  PF=0.57  t=-14.0  avgRet=-1.96%  top5%=-107%  hold=1.4d  risk=4.4%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.380 (n=3213)  2022-2026: -0.458 (n=4748)
+E-orb proxy, close-based (optimistic bound) n=  7756  win= 30.8%  avgR=+0.697  medR=-1.06  avgW=+4.97R  avgL=-1.20R  PF=1.84  t=+10.5  avgRet=+1.52%  top5%=115%  hold=3.8d  risk=4.3%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.479 (n=3112)  2022-2026: +0.844 (n=4644)
+E-orb proxy, entry-day low ignored n=  7700  win= 31.6%  avgR=+0.095  medR=-1.09  avgW=+4.99R  avgL=-2.17R  PF=1.06  t=+1.3  avgRet=-0.52%  top5%=856%  hold=4.2d  risk=4.3%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.061 (n=3082)  2022-2026: +0.199 (n=4618)
 
 E-close: vol>=3x, strong close; buy close, LOD stop by year:
  year   n   win   avgR    sumR  avg_ret    pf

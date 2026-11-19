@@ -18,13 +18,19 @@ import numba as nb
 
 @nb.njit(cache=True)
 def simulate_longs(O, H, L, C, MA, t0s, js, entries, stops, at_close, day0_mode,
-                   part_day, part_frac, be_after_part, max_hold, cost):
+                   part_day, part_frac, be_after_part, max_hold, cost, exact0):
     """Simulate long trades.
 
-    day0_mode (intraday entries only):
-        0 = optimistic  - day-0 low is assumed to have printed before the entry (never stops day 0)
-        1 = pessimistic - if day-0 low <= stop the trade is stopped on day 0
-        2 = close-based - stopped on day 0 only if the day-0 close finished below the stop
+    day0_mode (intraday entries only) - how the entry day's own low is treated, which daily bars
+    cannot settle because the order of the day's high and low is unknown:
+        1 = worst case  - if the day-0 low <= stop the trade is stopped on day 0
+        2 = close-based - stopped on day 0 only if the day-0 close finished below the stop.  This
+                          forgives every intraday touch of the stop that recovered by the close, so
+                          it is the OPTIMISTIC bound for an intraday fill, not a middle case.
+        0 = ignore      - the day-0 low is ignored altogether (the stop only works from day 1)
+    exact0[k] = True marks a fill at the open: the whole day's range then comes after the fill, so
+    there is no ambiguity and the worst-case rule is simply correct - it is applied regardless of
+    day0_mode.
     Exits: stop (gap-aware), optional partial at the first profitable close on/after `part_day`
     sessions (then stop -> breakeven if be_after_part), trailing exit at the next open after a
     close below MA, time stop.
@@ -64,9 +70,10 @@ def simulate_longs(O, H, L, C, MA, t0s, js, entries, stops, at_close, day0_mode,
             if hi > best:
                 best = hi
             hit = False
-            if day0_mode == 1 and lo <= cur_stop:
+            mode = 1 if exact0[k] else day0_mode
+            if mode == 1 and lo <= cur_stop:
                 hit = True
-            elif day0_mode == 2 and c0 < cur_stop:
+            elif mode == 2 and c0 < cur_stop:
                 hit = True
             if hit:
                 realized = frac * cur_stop * (1.0 - cost)
@@ -149,13 +156,13 @@ def simulate_longs(O, H, L, C, MA, t0s, js, entries, stops, at_close, day0_mode,
 
 @nb.njit(cache=True)
 def simulate_shorts(O, H, L, C, MA, t0s, js, entries, stops, at_close, day0_mode,
-                    use_target, max_hold, cost, borrow_daily):
+                    use_target, max_hold, cost, borrow_daily, exact0):
     """Simulate short trades.
 
     Exits: stop above (gap-aware), optional profit target = cover when price trades down to the
     previous day's MA value, time stop.  If stop and target are both touched in one bar the stop is
     assumed to come first.  `borrow_daily` is charged on the entry notional per calendar row held.
-    day0_mode as in simulate_longs but mirrored (uses the day-0 high).
+    day0_mode and exact0 as in simulate_longs but mirrored (they use the day-0 high).
     """
     n = len(t0s)
     T = C.shape[0]
@@ -182,9 +189,10 @@ def simulate_shorts(O, H, L, C, MA, t0s, js, entries, stops, at_close, day0_mode
             hi = H[t0, j]
             c0 = C[t0, j]
             hit = False
-            if day0_mode == 1 and hi >= stop:
+            mode = 1 if exact0[k] else day0_mode
+            if mode == 1 and hi >= stop:
                 hit = True
-            elif day0_mode == 2 and c0 > stop:
+            elif mode == 2 and c0 > stop:
                 hit = True
             if hit:
                 px_out = stop

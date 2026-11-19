@@ -35,7 +35,7 @@ def title(ax, main, sub):
 # ------------------------------------------------------------------ figure 1: equity curves
 eq = pd.read_csv(os.path.join(res, "portfolio_equity_hf.csv"), index_col=0, parse_dates=True)
 series = [
-    ("QQQ buy & hold (total return)", "QQQ 买入持有", MUTED, (0, (4, 2))),
+    ([c for c in eq.columns if c.startswith("QQQ buy")][0], "QQQ 买入持有", MUTED, (0, (4, 2))),
     ("SPY buy & hold (total return)", "SPY 买入持有", MUTED, "-"),
     ("Parabolic short (next open, +30% stop), 50bp/fill, 50% borrow", "抛物线做空（规则版）", AQUA, "-"),
     ("Earnings EP, close entry, 50-day trail", "财报 EP（收盘确认，50日线跟踪）", ORANGE, "-"),
@@ -85,18 +85,18 @@ def pick(sr, prefix):
 
 
 rows = [
-    ("突破：枢轴价挂单买入", {"pess": pick(bo, "Q0 day0 pessimistic"), "close": pick(bo, "Q0 baseline"), "opt": pick(bo, "Q0 day0 optimistic")}),
-    ("EP：开盘价买入", {"pess": pick(ep, "E-open, day0 pessimistic"), "close": pick(ep, "E-open: buy the open")}),
-    ("EP：开盘区间突破（日线代理）", {"pess": pick(ep, "E-orb proxy: buy"), "close": pick(ep, "E-orb proxy, day0 close-based"),
-                           "opt": pick(ep, "E-orb proxy, day0 optimistic")}),
+    ("突破：枢轴价挂单买入", {"pess": pick(bo, "Q0 day0 worst case"), "close": pick(bo, "Q0 baseline"), "opt": pick(bo, "Q0 day0 ignored")}),
+    ("EP：开盘区间突破（日线代理）", {"pess": pick(ep, "E-orb proxy: buy"), "close": pick(ep, "E-orb proxy, close-based"),
+                           "opt": pick(ep, "E-orb proxy, entry-day low ignored")}),
+    ("EP：开盘价买入", {"none": pick(ep, "E-open: buy the open")}),
     ("突破：收盘确认后买入", {"none": pick(bo, "C0 close-confirmed")}),
     ("EP：收盘确认后买入", {"none": pick(ep, "E-close: vol>=3x")}),
     ("EP：仅财报跳空，收盘确认", {"none": pick(ep, "E-close, earnings only  ") if False else float(ep[[k for k in ep.index if k.strip() == "E-close, earnings only"][0]])}),
     ("EP：仅财报跳空，50日线跟踪", {"none": pick(ep, "E-close, earnings only, trail SMA50")}),
 ]
-style = {"pess": (BLUE, "悲观：当日最低触及止损即出局"), "close": (ORANGE, "折中：收盘跌破止损才算出局"),
-         "opt": (AQUA, "乐观：忽略入场当日的最低价"), "none": (INK2, "无盘中歧义（收盘入场）")}
-fig, ax = plt.subplots(figsize=(10, 4.8), dpi=200)
+style = {"pess": (BLUE, "最坏情形：入场当日最低价触及止损即出局"), "close": (ORANGE, "乐观端：入场当日收盘跌破止损才算出局"),
+         "opt": (AQUA, "忽略入场当日的最低价"), "none": (INK2, "无盘中歧义（按开盘价或收盘价成交）")}
+fig, ax = plt.subplots(figsize=(10, 5.4), dpi=200)
 ys = np.arange(len(rows))[::-1]
 for y, (lab, vals) in zip(ys, rows):
     xs = list(vals.values())
@@ -112,12 +112,13 @@ for y, (lab, vals) in zip(ys, rows):
 ax.axvline(0, color=BASE, lw=1.2, zorder=0)
 ax.set_yticks(ys)
 ax.set_yticklabels([r[0] for r in rows], color=INK, fontsize=10)
-ax.set_xlim(-0.62, 0.78)
+ax.set_xlim(-0.66, 0.82)
 ax.set_xlabel("平均每笔盈亏（R = 初始止损距离的倍数；每次成交计 15 个基点成本）")
 ax.grid(axis="y", visible=False)
 handles = [plt.Line2D([], [], marker="o", ls="", ms=8, color=c, mec=SURFACE, mew=1.5, label=l) for c, l in style.values()]
-ax.legend(handles=handles, loc="lower right", frameon=False, fontsize=9, labelcolor=INK2)
-title(ax, "日内入场的回测结论，取决于日线无法知道的盘中顺序", "同一批信号在不同“入场当日”假设下的平均 R，2005–2026；灰线越长，说明日线回测越无法下结论")
+ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.42, -0.17), ncol=2, frameon=False, fontsize=9,
+          labelcolor=INK2, columnspacing=2.0, handletextpad=0.4)
+title(ax, "盘中入场的回测结论，取决于日线无法知道的盘中顺序", "同一批信号在不同“入场当日”假设下的平均 R，2005–2026；灰线两端是日线能给出的上下界，线越长越无法下结论")
 fig.tight_layout()
 fig.savefig(os.path.join(figdir, "fig2_intraday_assumption.png"))
 plt.close(fig)

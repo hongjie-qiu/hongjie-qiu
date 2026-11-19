@@ -83,7 +83,7 @@ bo = long_trades(p, f, breakout_signals(p, f, mode="intraday", regime=REG, start
 bo_nr = long_trades(p, f, breakout_signals(p, f, mode="intraday", regime=None, start=a.start, end=END, **SIG), at_close=False, **TRD)
 bo_pess = long_trades(p, f, breakout_signals(p, f, mode="intraday", regime=REG, start=a.start, end=END, **SIG), at_close=False,
                       **dict(TRD, day0_mode=1))
-for nm, df in (("Breakout Q0 (regime filter)", bo), ("Breakout Q0, no regime filter", bo_nr), ("Breakout Q0, day-0 pessimistic", bo_pess)):
+for nm, df in (("Breakout Q0 (regime filter)", bo), ("Breakout Q0, no regime filter", bo_nr), ("Breakout Q0, entry day worst case", bo_pess)):
     eq, st, tk = run(nm, df, risk_pct=0.005, max_pos_w=0.20, max_gross=1.0, max_positions=20, cost=0.0015)
     out[nm] = eq; stats.append(st)
 eq, st, tk = run("Breakout Q0, 1% risk, 140% gross", bo, risk_pct=0.01, max_pos_w=0.25, max_gross=1.4, max_positions=25, cost=0.0015)
@@ -118,13 +118,12 @@ for nm, kw in (("Parabolic short (next open, +30% stop), 50bp/fill, 50% borrow",
 for s_ in ("SPY", "QQQ"):
     if s_ in p["col"]:
         tr = total_return_index(p, s_, load_dividends(a.hf_dir, s_))
-        if s_ == "QQQ":  # the snapshot's QQQ series stops early; continue it with the QQQM-spliced proxy
-            q = nasdaq_proxy(p); last = np.where(np.isfinite(C[:, p["col"]["QQQ"]]))[0][-1]
-            for i in range(last + 1, T):
-                tr[i] = tr[i - 1] * (q[i] / q[i - 1] if np.isfinite(q[i]) and np.isfinite(q[i - 1]) and q[i - 1] > 0 else 1.0)
-        tr = pd.Series(tr).ffill().values
+        last = np.where(np.isfinite(C[:, p["col"][s_]]))[0][-1]
+        tr[last + 1:] = np.nan  # a benchmark ends where its data ends (QQQ stops 2026-09-11 in the main snapshot)
         eq = np.full(T, np.nan); eq[i0:i1] = tr[i0:i1] / tr[i0] * 1e5
-        st = perf_stats(eq[i0:i1], dates[i0:i1], rf[i0:i1]); st.update(name=f"{s_} buy & hold (total return)", signals=0, taken=0, avg_gross=1.0, pct_days_invested=1.0)
+        st = perf_stats(eq[i0:i1], dates[i0:i1], rf[i0:i1])
+        end_lbl = "" if last >= i1 - 1 else f", to {dates[last]}"
+        st.update(name=f"{s_} buy & hold (total return{end_lbl})", signals=0, taken=0, avg_gross=1.0, pct_days_invested=1.0)
         out[st["name"]] = eq; stats.append(st)
 
 S = pd.DataFrame(stats)[["name", "cagr", "vol", "sharpe", "maxdd", "calmar", "final_mult", "taken", "signals", "avg_gross", "pct_days_invested"]]
@@ -140,7 +139,7 @@ yr.to_csv(os.path.join(a.out_dir, f"portfolio_yearly_{a.label}.csv"))
 show = [c for c in yr.columns if c in ("Breakout Q0 (regime filter)", "Earnings EP, close entry, 50-day trail",
                                         "Earnings EP, close entry, his 3-5d/10-day rules",
                                         "Parabolic short (next open, +30% stop), 50bp/fill, 50% borrow",
-                                        "SPY buy & hold (total return)", "QQQ buy & hold (total return)")]
+                                        ) or "buy & hold" in c]
 print("\nCalendar-year returns (%):")
 print((yr[show] * 100).round(1).rename(columns=lambda c: c[:24]).to_string())
 

@@ -22,6 +22,9 @@ import os
 import numpy as np
 import duckdb
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from qm.clean import repair_scaling_glitches
+
 hf_dir, out_dir = sys.argv[1], sys.argv[2]
 os.makedirs(out_dir, exist_ok=True)
 START = "1999-12-31"
@@ -156,67 +159,43 @@ if drop.any():
     O, H, L, C, V = (fields[k] for k in ("open", "high", "low", "close", "volume"))
     n_s = len(keep)
 
-# ---------------------------------------------------------------- repair scaling glitches
-# Signature of a vendor scaling error (misdated or missing reverse-split adjustment): the close jumps
-# by a factor r >= 5 while share volume falls by about the same factor, i.e. dollar volume is roughly
-# continuous.  A genuine spike shows the opposite (volume explodes).  If the jump reverses within 10
-# bars the bars in between are blanked; otherwise all earlier bars are rescaled like a split.
-glitch_blank = glitch_rescale = 0
-glitch_at = []
-rescaled = []
-for j in range(n_s):
-    c = C[:, j]
-    idx = np.nonzero(np.isfinite(c))[0]
-    if len(idx) < 3:
-        continue
-    cv = c[idx].astype(np.float64)
-    vv = V[idx, j].astype(np.float64)
-    ratio = cv[1:] / cv[:-1]
-    cand = np.nonzero(ratio >= 5.0)[0]
-    for k in cand:
-        a, b = idx[k], idx[k + 1]          # jump between bar a and bar b
-        r = C[b, j] / C[a, j] if np.isfinite(C[a, j]) and np.isfinite(C[b, j]) else np.nan
-        if not np.isfinite(r) or r < 5.0 or not (vv[k] > 0) or vv[k + 1] / vv[k] > 2.0 / r:
-            continue
-        end = None
-        for m in range(k + 1, min(k + 11, len(idx) - 1)):
-            if cv[m + 1] / cv[m] <= 2.0 / r:
-                end = idx[m + 1]
-                break
-        if end is not None:
-            for a_ in (O, H, L, C, V):
-                a_[b:end, j] = np.nan
-            glitch_blank += 1
-        else:
-            for a_ in (O, H, L, C):
-                a_[:b, j] *= r
-            V[:b, j] /= r
-            glitch_rescale += 1
-            rescaled.append((b, j, r))
-        glitch_at.append((b, j))
-print("scaling glitches repaired: blanked", glitch_blank, "| rescaled as missing split", glitch_rescale)
-
-# ---------------------------------------------------------------- as-traded close from the split table
+# ---------------------------------------------------------------- recorded splits
 splits = con.execute(
     f"select symbol, cast(report_date as date) d, split_factor from read_parquet('{hf_dir}/stock_split_events.parquet')"
 ).fetchall()
 col = {s: j for j, s in enumerate(keep)}
-mult = np.ones((n_d, n_s), dtype=np.float32)
-splitday = np.zeros((n_d, n_s), dtype=bool)  # ex-dates, used to quarantine signals around splits
-n_used = 0
+split_rows = []          # (row, col, ratio) with ratio = new shares per old share
 for sym, d, fac in splits:
     j = col.get(sym)
     if j is None or not fac or ":" not in fac:
         continue
     try:
-        a, b = fac.split(":")
-        ratio = float(a) / float(b)
+        a_, b_ = fac.split(":")
+        ratio = float(a_) / float(b_)
     except ValueError:
         continue
     if not np.isfinite(ratio) or ratio <= 0:
         continue
+    split_rows.append((int(np.searchsorted(dates, np.datetime64(d))), j, ratio))
+split_events = {}
+for i, j, ratio in split_rows:
+    split_events.setdefault(j, []).append((i, 1.0 / ratio))   # jump of the as-traded price at the split
+
+# ---------------------------------------------------------------- repair scaling glitches
+# A misdated or missing reverse-split adjustment shows up as a >= 5x jump in the close with share
+# volume falling by the same factor.  A genuine squeeze can look the same, so a repair is made only
+# when a recorded split of matching size sits within 30 sessions, or (for jumps that never reverse)
+# when share volume stays lower afterwards.  See qm/clean.py.
+glitch_blank, glitch_rescale, glitch_left, glitch_at, rescaled = repair_scaling_glitches(O, H, L, C, V, split_events)
+print("scaling glitches: blanked", glitch_blank, "| rescaled as missing split", glitch_rescale,
+      "| candidates left untouched (no corroboration)", glitch_left)
+
+# ---------------------------------------------------------------- as-traded close from the split table
+mult = np.ones((n_d, n_s), dtype=np.float32)
+splitday = np.zeros((n_d, n_s), dtype=bool)  # ex-dates, used to quarantine signals around splits
+n_used = 0
+for i, j, ratio in split_rows:
     # bars strictly before the ex-date were divided by `ratio` in the adjusted series
-    i = int(np.searchsorted(dates, np.datetime64(d)))
     if i > 0:
         mult[:i, j] *= ratio
         n_used += 1

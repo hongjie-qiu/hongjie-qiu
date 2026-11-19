@@ -33,9 +33,9 @@ RET_H = ("rk21", "rk63", "rk126")
 
 variants = [
     # (name, mode, signal overrides, trade overrides)
-    ("Q0 baseline: pivot stop-entry, 1xADR stop, regime on", "intraday", {}, {}),
-    ("Q0 day0 pessimistic (day low <= stop => out)", "intraday", {}, {"day0_mode": 1}),
-    ("Q0 day0 optimistic (day-0 low ignored)", "intraday", {}, {"day0_mode": 0}),
+    ("Q0 baseline: pivot stop-entry, 1xADR stop, regime on (entry day: close-based = optimistic bound)", "intraday", {}, {}),
+    ("Q0 day0 worst case (entry-day low <= stop => out)", "intraday", {}, {"day0_mode": 1}),
+    ("Q0 day0 ignored (entry-day low ignored)", "intraday", {}, {"day0_mode": 0}),
     ("C0 close-confirmed entry, LOD stop, regime on", "close", {}, {}),
     ("Q0 no regime filter", "intraday", {"regime": None}, {}),
     ("Q0 regime = 10>20 only (not 'both rising')", "intraday", {"regime": REG_LOOSE}, {}),
@@ -100,7 +100,7 @@ for seed in range(20):
     df = long_trades(p, f, sig, at_close=False, **BASE_TRADE)
     ctrl_rows.append(summarize(df, f"control seed {seed}"))
 ctrl = pd.DataFrame(ctrl_rows)
-print("\nControl - random entry at the open in trending leaders, regime on, same exits (20 seeds):")
+print("\nControl - random entry at the open in trending leaders, regime on, same exits (20 seeds; fills at the open are exact):")
 print("  n per run ~%d | avgR mean %+.3f (min %+.3f, max %+.3f) | win %.1f%% | avgRet %+.2f%%" % (
     ctrl["n"].mean(), ctrl["avg_R"].mean(), ctrl["avg_R"].min(), ctrl["avg_R"].max(),
     ctrl["win_rate"].mean() * 100, ctrl["avg_ret"].mean() * 100))

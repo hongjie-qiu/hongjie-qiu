@@ -99,33 +99,45 @@ def reaction_matrix_sec(p, ann_path, ident_path=None, current=False):
         ).fetchall():
             cur.setdefault(cik, []).append(val)
     dates = p["dates"]
-    col = p["col"]
     T, S = len(dates), len(p["symbols"])
     E = np.zeros((T, S), dtype=bool)
     n_hit = 0
+    # a ticker reused by different companies is stored as several columns (SYM, SYM~1, ...);
+    # a filing belongs to whichever of them was trading around the filing date
+    segs = {}
+    for j, name in enumerate(p["symbols"]):
+        segs.setdefault(name.split("~")[0], []).append(j)
+    has = np.isfinite(np.asarray(p["close"]))
 
-    def find(sym):
+    def find(sym, i):
         if not sym:
             return None
         for cand in (sym, sym.replace(".", "-"), sym.replace("-", ".")):
-            j = col.get(cand)
-            if j is not None:
-                return j
+            js = segs.get(cand)
+            if not js:
+                continue
+            if len(js) == 1:
+                return js[0]
+            lo, hi = max(0, i - 5), min(T, i + 6)
+            for j in js:
+                if has[lo:hi, j].any():
+                    return j
+            return None
         return None
 
     for cik, ticker, fts in rows:
+        i = int(np.searchsorted(dates, np.datetime64(fts)))
+        if i >= T:
+            continue
         j = None
         if current:
             for t in cur.get(cik, []):
-                j = find(t)
+                j = find(t, i)
                 if j is not None:
                     break
         if j is None:
-            j = find(ticker)
+            j = find(ticker, i)
         if j is None:
-            continue
-        i = int(np.searchsorted(dates, np.datetime64(fts)))
-        if i >= T:
             continue
         E[i, j] = True
         n_hit += 1

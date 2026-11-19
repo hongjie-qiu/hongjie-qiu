@@ -1,71 +1,72 @@
+== parabolic dolt
 === Event study: return of a SHORT opened at the next open after a 'parabolic' close (positive = short wins), no stops, no costs ===
-5d run >= 100%, 3 up days, >=30% over SMA10        n= 1071 | 1d mean +1.9% med +7.6% win 64% worst -999% | 3d mean +4.5% med +11.1% win 68% worst -1702% | 5d mean +5.6% med +14.3% win 71% worst -1701% | 10d mean +8.7% med +19.7% win 71% worst -1618% | 20d mean +11.0% med +23.6% win 72% worst -1415%
-5d run >= 60%                                      n= 2421 | 1d mean +1.9% med +4.0% win 61% worst -999% | 3d mean +3.5% med +7.3% win 63% worst -1702% | 5d mean +4.2% med +8.8% win 65% worst -1701% | 10d mean +5.7% med +11.1% win 65% worst -1618% | 20d mean +6.9% med +16.0% win 67% worst -2005%
-5d run >= 200%                                     n=  313 | 1d mean +6.0% med +11.7% win 64% worst -226% | 3d mean +8.5% med +15.4% win 72% worst -328% | 5d mean +10.8% med +22.7% win 75% worst -675% | 10d mean +19.8% med +31.3% win 76% worst -391% | 20d mean +21.2% med +36.8% win 78% worst -344%
-5d run >= 100%, day $vol >= 50M                    n=  783 | 1d mean +1.9% med +7.9% win 63% worst -999% | 3d mean +3.9% med +11.2% win 67% worst -1702% | 5d mean +5.4% med +14.9% win 71% worst -1701% | 10d mean +9.2% med +20.5% win 71% worst -1618% | 20d mean +11.5% med +25.6% win 73% worst -1415%
-10d run >= 200%                                    n=  449 | 1d mean +4.4% med +10.0% win 66% worst -210% | 3d mean +10.5% med +15.8% win 72% worst -200% | 5d mean +14.0% med +22.1% win 75% worst -269% | 10d mean +20.4% med +29.4% win 75% worst -300% | 20d mean +22.9% med +36.4% win 79% worst -344%
-5d run >= 50%, day $vol >= 200M (large/liquid)     n= 1091 | 1d mean +2.0% med +3.8% win 62% worst -291% | 3d mean +4.0% med +6.4% win 63% worst -260% | 5d mean +4.5% med +8.8% win 65% worst -581% | 10d mean +6.5% med +11.6% win 66% worst -802% | 20d mean +8.7% med +17.3% win 69% worst -928%
-5d run >= 100% 2005-2012: n=14 5d mean +8.3% med +6.5% win 64%
-5d run >= 100% 2013-2018: n=242 5d mean +13.0% med +15.4% win 73%
-5d run >= 100% 2019-2021: n=595 5d mean +8.1% med +15.0% win 75%
-5d run >= 100% 2022-2026: n=929 5d mean +6.3% med +13.6% win 67%
-P-red: first red close after 5d>=100%, stop=run high n=  1082  win= 65.9%  avgR=-0.020  medR=+0.15  avgW=+0.53R  avgL=-1.08R  PF=0.95  t=-0.5  avgRet=+1.47%  top5%=-546%  hold=4.4d  risk=56.8%  worstRet=-422%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.009 (n=411)  2022-2026: -0.027 (n=671)
-P-red, target SMA20, hold<=20d     n=  1082  win= 61.8%  avgR=-0.042  medR=+0.18  avgW=+0.70R  avgL=-1.24R  PF=0.91  t=-1.0  avgRet=+2.55%  top5%=-305%  hold=8.1d  risk=56.8%  worstRet=-422%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.067 (n=411)  2022-2026: -0.027 (n=671)
-P-red, no target, 5-day time exit  n=  1082  win= 58.6%  avgR=+0.008  medR=+0.09  avgW=+0.60R  avgL=-0.83R  PF=1.02  t=+0.2  avgRet=+2.04%  top5%=1584%  hold=4.4d  risk=56.8%  worstRet=-269%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.048 (n=411)  2022-2026: -0.017 (n=671)
-P-red, run >= 60%                  n=  2450  win= 60.9%  avgR=-0.079  medR=+0.12  avgW=+0.60R  avgL=-1.13R  PF=0.82  t=-2.6  avgRet=+0.52%  top5%=-157%  hold=4.1d  risk=40.3%  worstRet=-422%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.054 (n=1033)  2022-2026: -0.097 (n=1417)
-P-red, run >= 200%                 n=   314  win= 68.5%  avgR=-0.049  medR=+0.16  avgW=+0.44R  avgL=-1.10R  PF=0.86  t=-0.7  avgRet=+1.19%  top5%=-158%  hold=4.8d  risk=80.0%  worstRet=-207%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.149 (n=96)  2022-2026: -0.006 (n=218)
-P-red, day $vol >= 50M             n=   786  win= 66.8%  avgR=-0.044  medR=+0.15  avgW=+0.47R  avgL=-1.08R  PF=0.88  t=-1.1  avgRet=+1.42%  top5%=-210%  hold=4.6d  risk=59.9%  worstRet=-422%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.008 (n=319)  2022-2026: -0.069 (n=467)
-P-red, cost 0, borrow 0            n=  1082  win= 69.4%  avgR=+0.114  medR=+0.19  avgW=+0.56R  avgL=-0.91R  PF=1.41  t=+3.7  avgRet=+3.33%  top5%=103%  hold=4.4d  risk=56.8%  worstRet=-417%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.127 (n=411)  2022-2026: +0.106 (n=671)
-P-red, cost 100bp/fill, borrow 100%/yr n=  1082  win= 63.4%  avgR=-0.155  medR=+0.11  avgW=+0.49R  avgL=-1.28R  PF=0.67  t=-3.2  avgRet=-0.39%  top5%=-68%  hold=4.4d  risk=56.8%  worstRet=-428%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.144 (n=411)  2022-2026: -0.161 (n=671)
-P-red, cost 100bp/fill, borrow 300%/yr n=  1082  win= 55.9%  avgR=-0.390  medR=+0.05  avgW=+0.46R  avgL=-1.47R  PF=0.40  t=-5.2  avgRet=-3.88%  top5%=-25%  hold=4.4d  risk=56.8%  worstRet=-435%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.411 (n=411)  2022-2026: -0.377 (n=671)
-P-open: short next open, stop +30%, pessimistic n=  1236  win= 58.7%  avgR=+0.122  medR=+0.36  avgW=+0.88R  avgL=-0.95R  PF=1.31  t=+4.2  avgRet=+3.66%  top5%=76%  hold=4.1d  risk=30.0%  worstRet=-140%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.198 (n=460)  2022-2026: +0.077 (n=776)
-P-open, stop +50%                  n=  1186  win= 65.5%  avgR=+0.051  medR=+0.27  avgW=+0.50R  avgL=-0.81R  PF=1.18  t=+2.4  avgRet=+2.55%  top5%=111%  hold=4.8d  risk=50.0%  worstRet=-161%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.084 (n=445)  2022-2026: +0.031 (n=741)
-P-open, stop +100%                 n=  1121  win= 71.9%  avgR=+0.039  medR=+0.15  avgW=+0.24R  avgL=-0.48R  PF=1.28  t=+3.1  avgRet=+3.87%  top5%=74%  hold=5.6d  risk=100.0%  worstRet=-161%
-    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.053 (n=424)  2022-2026: +0.030 (n=697)
+5d run >= 100%, 3 up days, >=30% over SMA10        n= 1093 | 1d mean +1.8% med +7.8% win 64% worst -999% | 3d mean +4.3% med +11.4% win 69% worst -1702% | 5d mean +5.6% med +14.6% win 71% worst -1701% | 10d mean +8.9% med +20.0% win 71% worst -1618% | 20d mean +11.2% med +24.0% win 73% worst -1415%
+5d run >= 60%                                      n= 2456 | 1d mean +1.8% med +4.1% win 61% worst -999% | 3d mean +3.5% med +7.6% win 63% worst -1702% | 5d mean +4.2% med +9.1% win 65% worst -1701% | 10d mean +5.7% med +11.2% win 65% worst -1618% | 20d mean +7.1% med +16.2% win 67% worst -2005%
+5d run >= 200%                                     n=  326 | 1d mean +5.7% med +12.1% win 65% worst -354% | 3d mean +7.5% med +16.3% win 73% worst -573% | 5d mean +10.9% med +23.0% win 76% worst -675% | 10d mean +19.7% med +31.1% win 76% worst -391% | 20d mean +21.6% med +36.6% win 78% worst -344%
+5d run >= 100%, day $vol >= 50M                    n=  801 | 1d mean +2.0% med +8.2% win 63% worst -999% | 3d mean +4.0% med +11.4% win 68% worst -1702% | 5d mean +5.5% med +15.0% win 71% worst -1701% | 10d mean +9.7% med +21.2% win 72% worst -1618% | 20d mean +12.1% med +25.8% win 74% worst -1415%
+10d run >= 200%                                    n=  459 | 1d mean +5.4% med +10.7% win 68% worst -210% | 3d mean +11.8% med +17.0% win 73% worst -200% | 5d mean +15.0% med +22.3% win 76% worst -269% | 10d mean +20.5% med +29.8% win 75% worst -300% | 20d mean +23.1% med +35.9% win 79% worst -344%
+5d run >= 50%, day $vol >= 200M (large/liquid)     n= 1106 | 1d mean +2.1% med +3.9% win 62% worst -354% | 3d mean +3.8% med +6.6% win 64% worst -573% | 5d mean +4.5% med +9.1% win 65% worst -581% | 10d mean +6.7% med +11.7% win 66% worst -802% | 20d mean +9.1% med +17.8% win 69% worst -928%
+5d run >= 100% 2005-2012: n=15 5d mean +9.8% med +8.5% win 67%
+5d run >= 100% 2013-2018: n=241 5d mean +13.2% med +16.8% win 74%
+5d run >= 100% 2019-2021: n=603 5d mean +8.1% med +14.9% win 75%
+5d run >= 100% 2022-2026: n=943 5d mean +6.3% med +13.9% win 68%
+P-red: first red close after 5d>=100%, stop=run high n=  1103  win= 66.5%  avgR=+0.055  medR=+0.18  avgW=+0.53R  avgL=-0.88R  PF=1.18  t=+1.9  avgRet=+1.54%  top5%=196%  hold=4.4d  risk=45.6%  worstRet=-422%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.066 (n=421)  2022-2026: +0.048 (n=682)
+P-red, target SMA20, hold<=20d     n=  1103  win= 62.0%  avgR=+0.038  medR=+0.22  avgW=+0.70R  avgL=-1.04R  PF=1.10  t=+1.1  avgRet=+2.58%  top5%=333%  hold=8.2d  risk=45.6%  worstRet=-422%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.026 (n=421)  2022-2026: +0.045 (n=682)
+P-red, no target, 5-day time exit  n=  1103  win= 58.9%  avgR=+0.072  medR=+0.11  avgW=+0.60R  avgL=-0.69R  PF=1.25  t=+2.4  avgRet=+2.05%  top5%=173%  hold=4.5d  risk=45.6%  worstRet=-172%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.095 (n=421)  2022-2026: +0.057 (n=682)
+P-red, run >= 60%                  n=  2487  win= 61.2%  avgR=-0.017  medR=+0.14  avgW=+0.57R  avgL=-0.95R  PF=0.95  t=-0.8  avgRet=+0.46%  top5%=-636%  hold=4.1d  risk=34.8%  worstRet=-422%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.001 (n=1054)  2022-2026: -0.031 (n=1433)
+P-red, run >= 200%                 n=   326  win= 69.0%  avgR=+0.016  medR=+0.20  avgW=+0.45R  avgL=-0.94R  PF=1.06  t=+0.4  avgRet=+0.98%  top5%=479%  hold=4.7d  risk=58.7%  worstRet=-163%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.013 (n=101)  2022-2026: +0.018 (n=225)
+P-red, day $vol >= 50M             n=   804  win= 67.4%  avgR=+0.033  medR=+0.18  avgW=+0.47R  avgL=-0.87R  PF=1.12  t=+1.1  avgRet=+1.38%  top5%=275%  hold=4.6d  risk=49.9%  worstRet=-422%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.045 (n=328)  2022-2026: +0.025 (n=476)
+P-red, cost 0, borrow 0            n=  1103  win= 69.9%  avgR=+0.130  medR=+0.22  avgW=+0.56R  avgL=-0.86R  PF=1.50  t=+4.5  avgRet=+3.40%  top5%=87%  hold=4.4d  risk=45.6%  worstRet=-417%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.139 (n=421)  2022-2026: +0.125 (n=682)
+P-red, cost 100bp/fill, borrow 100%/yr n=  1103  win= 64.1%  avgR=-0.021  medR=+0.14  avgW=+0.49R  avgL=-0.93R  PF=0.94  t=-0.7  avgRet=-0.32%  top5%=-485%  hold=4.4d  risk=45.6%  worstRet=-428%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.008 (n=421)  2022-2026: -0.029 (n=682)
+P-red, cost 100bp/fill, borrow 300%/yr n=  1103  win= 56.6%  avgR=-0.165  medR=+0.06  avgW=+0.46R  avgL=-0.97R  PF=0.61  t=-5.2  avgRet=-3.82%  top5%=-57%  hold=4.4d  risk=45.6%  worstRet=-435%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.146 (n=421)  2022-2026: -0.176 (n=682)
+P-open: short next open, stop +30%, pessimistic n=  1285  win= 57.8%  avgR=+0.104  medR=+0.34  avgW=+0.88R  avgL=-0.96R  PF=1.26  t=+3.7  avgRet=+3.13%  top5%=90%  hold=4.0d  risk=30.0%  worstRet=-140%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.176 (n=482)  2022-2026: +0.062 (n=803)
+P-open, stop +50%                  n=  1215  win= 65.3%  avgR=+0.047  medR=+0.27  avgW=+0.51R  avgL=-0.82R  PF=1.16  t=+2.2  avgRet=+2.34%  top5%=121%  hold=4.7d  risk=50.0%  worstRet=-161%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.082 (n=455)  2022-2026: +0.026 (n=760)
+P-open, stop +100%                 n=  1144  win= 71.9%  avgR=+0.037  medR=+0.15  avgW=+0.24R  avgL=-0.49R  PF=1.27  t=+3.0  avgRet=+3.74%  top5%=77%  hold=5.6d  risk=100.0%  worstRet=-161%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.054 (n=433)  2022-2026: +0.028 (n=711)
 
 P-red by year:
  year   n   win   avgR    sumR  avg_ret    pf
- 2019  34 0.412 -0.857 -29.135   -0.004 0.244
- 2020 216 0.736  0.117  25.215    0.047 1.418
- 2021 161 0.689  0.002   0.400   -0.019 1.008
- 2022  93 0.688 -0.037  -3.445    0.021 0.912
- 2023 112 0.607 -0.075  -8.405    0.004 0.779
- 2024 212 0.627 -0.053 -11.251    0.003 0.856
- 2025 237 0.646  0.008   1.808    0.023 1.019
- 2026  17 0.647  0.170   2.895    0.032 1.613
-exit reasons (0 stop, 2 time, 3 data end, 5 target): {5: 720, 0: 263, 2: 91, 3: 8}
+ 2019  32 0.375 -0.347 -11.118   -0.027 0.370
+ 2020 229 0.738  0.172  39.372    0.053 1.816
+ 2021 160 0.694 -0.004  -0.588   -0.024 0.988
+ 2022 100 0.720  0.110  11.028    0.042 1.381
+ 2023 112 0.607 -0.017  -1.901    0.001 0.941
+ 2024 211 0.640  0.002   0.459    0.006 1.007
+ 2025 242 0.645  0.083  20.028    0.014 1.256
+ 2026  17 0.647  0.173   2.947    0.032 1.631
+exit reasons (0 stop, 2 time, 3 data end, 5 target): {5: 743, 0: 255, 2: 98, 3: 7}
 worst 10 P-red trades:
-      date symbol     entry      stop  exit_date       ret         R  hold  reason      run
-2021-02-02   LODE 19.000000 41.700001 2021-02-17 -4.224394 -3.535836    10       0 1.521368
-2020-01-22   NNVC  3.820000 13.450000 2020-01-27 -2.694199 -1.068727     3       0 1.560241
-2025-05-13   KDLY 10.350000 31.450001 2025-05-22 -2.072729 -1.016718     7       0 4.051660
-2020-06-18   COHN  7.700000 18.900000 2020-06-19 -1.715263 -1.179244     1       0 1.260638
-2021-01-26   EXPR 60.799999 88.800003 2021-01-27 -1.628579 -3.536343     1       0 2.293651
-2024-03-07   SWIN 30.250000 65.940002 2024-03-13 -1.203670 -1.020203     4       0 2.871499
-2020-01-28   NNVC  8.400000 17.770000 2020-01-31 -1.188453 -1.065422     3       0 3.702381
-2024-12-24   MYSZ  4.170000  5.100000 2024-12-27 -1.168393 -5.238923     2       0 3.192983
-2025-03-25   VVPR  2.260000  4.370000 2025-03-26 -0.950281 -1.017836     1       0 3.600000
-2020-06-29   VXRT  7.490000 14.300000 2020-07-14 -0.943600 -1.037821    10       0 2.092308
+      date symbol      entry       stop  exit_date       ret         R  hold  reason      run
+2021-02-02   LODE  19.000000  38.000000 2021-02-17 -4.224394 -4.224394    10       0 1.521368
+2020-06-18   COHN   7.700000  15.400000 2020-06-19 -1.715263 -1.715263     1       0 1.260638
+2021-01-26   EXPR  60.799999  88.800003 2021-01-27 -1.628579 -3.536343     1       0 2.293651
+2020-01-28   NNVC   8.400000  16.799999 2020-01-31 -1.188453 -1.188453     3       0 3.702381
+2024-12-24   MYSZ   4.170000   5.100000 2024-12-27 -1.168393 -5.238923     2       0 3.192983
+2024-12-02   QMCO  12.490000  24.980000 2024-12-11 -1.028889 -1.028889     7       0 6.354730
+2025-09-19   BREA  16.600000  33.200001 2025-09-30 -1.028889 -1.028889     7       0 2.778452
+2025-05-13   KDLY  10.350000  20.700001 2025-05-21 -1.026905 -1.026905     6       0 4.051660
+2024-03-07   SWIN  30.250000  60.500000 2024-03-13 -1.022937 -1.022937     4       0 2.871499
+2025-12-08    SMX 135.820007 271.640015 2025-12-11 -1.020952 -1.020952     3       0 4.438729
 best 10 P-red trades:
       date symbol       entry        stop  exit_date      ret         R  hold  reason      run
 2024-08-22   UBXG  510.399994  567.039978 2024-08-23 0.838328  7.554425     1       5 1.512820
-2022-10-19   IMUX    9.470000   11.760000 2022-11-03 0.805498  3.331032    11       2 1.895442
 2025-07-02    WAI   89.250000   94.000000 2025-07-07 0.805233 15.129912     2       5 1.084848
-2021-01-28    GME   48.400002  120.750000 2021-02-12 0.701160  0.469055    11       2 1.163099
+2022-10-19   IMUX    9.470000   11.760000 2022-10-24 0.764063  3.159686     3       5 1.895442
 2025-07-17    YHC    6.570000   11.140000 2025-07-18 0.598358  0.860222     1       5 1.346939
-2025-11-07   DTCK    1.410000    6.890000 2025-11-21 0.576010  0.148207    10       5 2.435484
+2025-11-07   DTCK    1.410000    2.820000 2025-11-21 0.576010  0.576010    10       5 2.435484
 2024-09-11   RYDE   13.110000   22.490000 2024-09-12 0.571391  0.798607     1       5 1.659713
-2024-08-20   NCNA 1267.989990 1607.709961 2024-08-30 0.563428  2.102970     8       5 1.886905
+2024-08-20   NCNA 1702.000000 2158.000000 2024-08-30 0.563428  2.102970     8       5 1.886905
 2020-06-09  HTZ~1    4.180000    6.250000 2020-06-11 0.541426  1.093315     2       5 5.213483
 2023-05-09   IBRX    5.920000    6.930000 2023-05-11 0.522484  3.062484     2       5 1.081169
+2024-04-17    IZM    5.990000   11.980000 2024-05-01 0.496987  0.496987    10       5 1.134052

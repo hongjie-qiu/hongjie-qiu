@@ -1,13 +1,15 @@
-# Independent backtest of the three setups (run in this session, 2026-11-19)
+# Independent backtest of the three setups (run in this session, 2026-11-19; revised after an independent code audit)
 
 Scope: an original, rule-based, daily-bar backtest of Kullamägi's three setups on US stocks, built for this
 report. Code is in `/home/user/hongjie-qiu/backtest/src/`, raw outputs in `/home/user/hongjie-qiu/backtest/results/`.
 Every number below was produced by that code in this session ([D] = computed directly). Interpretation is
 kept in clearly marked "Inference" paragraphs.
 
-**Status of verification:** the simulator has unit tests on hand-built bars (`src/test_sim.py`, all pass). An
-independent code audit (look-ahead, fill logic, accounting) was commissioned in parallel; see
-`/home/user/hongjie-qiu/backtest/AUDIT.md` and the "Audit outcome" section at the end of this file.
+**This is the second version.** The first version was audited by an independent reviewer who found no look-ahead
+and no accounting error but eight issues that biased specific numbers (section 5). Those were fixed and every
+experiment was re-run; all figures in this file come from the re-run. Conclusions did not change direction; the
+two positive results became somewhat smaller, and one spurious positive (EP bought at the open under an
+impossible entry-day assumption) disappeared.
 
 ---
 
@@ -15,29 +17,33 @@ independent code audit (look-ahead, fill logic, accounting) was commissioned in 
 
 1. **The scan universe has negative drift.** Stocks in the top 2% of his own momentum measure with ADR >= 4%
    ("leaders") underperformed SPY by 1.1% over the next 20 days on average in 2005-2026 (t = -2.4), and by 3.6%
-   in 2022-2026 (t = -3.4). The academic 12-2 momentum top decile in the same data was roughly flat (+0.2%).
-   Holding what the scan shows is a losing proposition; any edge has to come from which names are picked and when.
-2. **Mechanical breakouts have no edge on daily bars.** The rule-faithful baseline (1,463 trades, 2005-2026,
-   15 bp per fill) averaged -0.06R per trade (t = -1.6); the 27 variants tested ranged from -0.20R to +0.01R,
-   none with a t-stat above +0.2. A control that bought the same trending leaders on random days with the same
-   exits averaged -0.05R. A portfolio run lost 2.3% a year with a 50% drawdown.
+   in 2022-2026 (t = -3.4); on delisting-inclusive data for 2019-2026 the shortfall is 2.6% (t = -2.4). The
+   academic 12-2 momentum top decile in the same data was roughly flat (+0.2%). Holding what the scan shows is a
+   losing proposition; any edge has to come from which names are picked and when.
+2. **Mechanical breakouts have no edge on daily bars.** The rule-faithful baseline (1,478 trades, 2005-2026,
+   15 bp per fill) averaged between -0.12R (worst-case handling of the entry day) and -0.07R (optimistic bound)
+   per trade; the 27 variants tested ranged from -0.21R to +0.01R, none with a t-stat above +0.1. A control that
+   bought the same trending leaders on random days with the same exits averaged -0.07R. A portfolio run lost
+   2.6% a year with a 52% drawdown.
 3. **Episodic pivots: most large gaps are traps; only earnings gaps hold, and only with a wide trail.** All
    gap-ups >= 10% lost 3.1% versus SPY over the next 20 days (t ~ -5.9). Non-earnings gaps lost 6.7%; earnings
-   gaps were flat (+0.4%). Managed with his standard rules (partial after 3-5 days, breakeven stop, 10-day trail)
-   earnings EPs bought at the close averaged -0.05R. Held with a 50-day trail and no breakeven stop they averaged
-   +0.25R (t = 3.2), positive in all four eras - but the portfolio made 4.6% a year against 10.6% for SPY, with
-   zero factor alpha.
+   gaps were flat (+0.4%). Buying every such gap at the open with a 1 ADR stop - which daily bars measure exactly -
+   averaged -0.12R. Earnings EPs bought at the close after a strong gap day and managed with his standard rules
+   (partial after 3-5 days, breakeven stop, 10-day trail) averaged -0.05R. Held with a 50-day trail and no
+   breakeven stop they averaged +0.25R (t = 3.1 naive, 2.5 clustered by month), positive in all four eras - but
+   the portfolio made 4.6% a year against 10.6% for SPY, with zero factor alpha.
 4. **Parabolic shorts carry the only strong mechanical signal - and the worst practical problems.** Shorting
-   the open after a >= 100% five-day run made a median +15.6% in five days (71% winners) in every era. After
-   50 bp per fill and 50% annual borrow the rule earned about +5% per trade (t = 6.5); at 100 bp and 100-300%
-   borrow the edge is zero to negative. Real squeezes of +500% to +3,900% within days are in the sample.
+   the open after a >= 100% five-day run made a median +15.8% in five days (71% winners) in every era. After
+   50 bp per fill and 50% annual borrow, a version with a hard +30% stop earned +0.15R, about +4.4% of the
+   position per trade (t = 5.7 naive, 5.1 clustered); at 100 bp and 100-300% borrow the edge is zero to negative.
+   Real squeezes of +500% to +3,900% within days are in the sample.
 5. **Intraday entries cannot be judged from daily bars.** For an opening-range entry proxy on EP days the
-   average result swings from -0.47R to +0.60R purely on the assumed order of the day's high and low. Any
-   daily-bar backtest of his opening-range-high entry (including most published ones) bakes in one of these
-   assumptions.
-6. **Survivorship bias does not drive these conclusions.** Re-running 2019-07 to 2026-01 on a
-   delisting-inclusive dataset (5,397 dead tickers) gave the same picture as the survivors-only data for the
-   same window.
+   average result lies anywhere between -0.47R and +0.60R depending purely on the assumed order of the day's high
+   and low. Any daily-bar backtest of his opening-range-high entry bakes in one of these assumptions.
+6. **Survivorship bias does not drive these conclusions for 2019-2026.** Re-running 2019-07 to 2026-01 on a
+   delisting-inclusive dataset (5,448 dead tickers) gave the same picture as the survivors-only data for the
+   same window. Comparisons between eras on the main panel are, however, confounded by its uneven survivorship
+   (section 4).
 
 ---
 
@@ -45,18 +51,23 @@ independent code audit (look-ahead, fill logic, accounting) was commissioned in 
 
 | Item | Source | Coverage | Notes |
 |---|---|---|---|
-| Panel A - main, long history | Hugging Face `defeatbeta/yahoo-finance-data`, `stock_prices.parquet`, snapshot of 2026-11-18 | 1999-12-31 -> 2026-11-17; 7,559 columns after cleaning (7,554 common stocks + SPY, QQQ, IWM, QQQM, DIA) | Yahoo prices, split-adjusted, not dividend-adjusted. **Survivors only**: contains tickers still listed in about 2024-2026 (TWTR, ATVI, SIVB, LEH, YHOO are absent). Results use 2005-01-03 onward. |
-| Panel B - delisting-inclusive | Hugging Face `siddharthmb/stocks-ohlcv` + `stocks-splits` + `stocks-symbols` (same schema as DoltHub `post-no-preference/stocks`; static snapshot of 2026-01-29) | 2011-01-03 -> 2026-01-28; 10,891 columns, 10,885 common; **5,397 common columns no longer trade on the last day** | Raw prices, back-adjusted here with split events validated against the actual overnight price change (2,029 + 502 applied, 581 rejected as spurious). Coverage of then-listed stocks is essentially complete from mid-2019 (on 2021-03-04 it holds 98.5% of that day's Nasdaq-screener common stocks, incl. TWTR, SIVB, ATVI, XLNX, FRC; in mid-2018 it still lacks TWX, MON, AET). Used for 2019-07-01 -> 2026-01-28 only. |
-| Earnings days | SEC 8-K Item 2.02 filings, Hugging Face `ZipLime/earnings-calendar` | 2003-04 -> 2026-11; 458,349 releases, delisted companies included | Gives the first session in which the release can be traded. 278,079 filings matched to Panel A. |
+| Panel A - main, long history | Hugging Face `defeatbeta/yahoo-finance-data`, `stock_prices.parquet`, snapshot of 2026-11-18 | 1999-12-31 -> 2026-11-17; 7,559 columns after cleaning (7,554 common stocks + SPY, QQQ, IWM, DIA, MDY) | Yahoo prices, split-adjusted, not dividend-adjusted. **Survivors only, and unevenly so**: 1,158 of the 7,554 columns stop early, almost all in 2024-2026; anything delisted before about 2024 (TWTR, ATVI, SIVB, LEH, YHOO) is absent. Results use 2005-01-03 onward. |
+| Panel B - delisting-inclusive | Hugging Face `siddharthmb/stocks-ohlcv` + `stocks-splits` + `stocks-symbols` (same schema as DoltHub `post-no-preference/stocks`; static snapshot of 2026-01-29) | 2011-01-03 -> 2026-01-28, 3,790 sessions; 10,978 columns, 10,972 common; **5,448 common columns no longer trade on the last day** | Raw prices, back-adjusted here: 2,856 recorded splits applied after validating each against the actual overnight price change within +/-3 sessions of the stated ex-date (313 of them on a shifted date; the rest of the candidates rejected or outside the data). Coverage of then-listed stocks is essentially complete from mid-2019 (on 2021-03-04 it holds 98.5% of that day's Nasdaq-screener common stocks). Used for 2019-07-01 -> 2026-01-28 only. Trading calendar taken from Panel A; 8 real trading days have no rows in the file and stay empty. |
+| Earnings days | SEC 8-K Item 2.02 filings, Hugging Face `ZipLime/earnings-calendar` | 2003-04 -> 2026-11; 458,349 releases, delisted companies included | Gives the first session in which the release can be traded. |
 | EPS surprise | Nasdaq earnings-calendar API, one request per weekday 2008-2026 (4,927 days, 234,503 rows) | 2008 -> 2026 | Survivors only; used only for the "EPS surprise" lines. |
-| Benchmarks, factors | SPY and QQQ total return (dividends added); Ken French daily Mkt-RF, SMB, HML, Mom, RF | to 2026-11-17 / 2026-09-30 | QQQ in Panel A stops 2026-09-11 and is spliced with QQQM returns after that. |
+| Benchmarks, factors | SPY and QQQ total return (dividends added); Ken French daily Mkt-RF, SMB, HML, Mom, RF | SPY to 2026-11-17; QQQ to 2026-09-11 (the snapshot's QQQ series stops there); factors to 2026-09-30 | For the regime filter only, QQQ is extended with SPY returns after 2026-09-11. |
 
-Cleaning applied to both panels [D]: bars with non-positive prices dropped (28,638 in A); 276 duplicate series
-removed in A (one company under old and new ticker); warrants, units, rights, preferreds, OTC foreign shares,
-ETFs/funds and SPAC shells excluded by ticker pattern / security name / missing sector; "scaling glitches"
-(price jumps >= 5x with share volume falling by the same factor - misdated reverse-split adjustments) repaired
-(A: 168 blanked, 184 rescaled; B: 9 and 208); signals within 10 sessions either side of a split ex-date are
-skipped; trades that are bar-for-bar copies of another trade are dropped.
+Cleaning applied to both panels [D]: bars with non-positive prices dropped; in Panel A 276 duplicate series removed
+(one company under old and new ticker); warrants, units, rights, preferreds, OTC foreign shares, ETFs/funds and
+SPAC shells excluded by ticker pattern / security name / missing sector; in Panel B a ticker that disappears for
+more than 20 sessions is cut into separate instruments, and a ticker that is an ETF or preferred today keeps an
+earlier segment as common stock when SEC earnings filings exist for it there (87 such segments, e.g. FB
+2012-2022). "Scaling glitches" (a close that jumps >= 5x while share volume falls by the same factor - the
+signature of a misdated or missing reverse-split adjustment) are repaired only when corroborated by a recorded
+split of matching size within 30 sessions or by a lasting drop in share volume: Panel A 31 blanked windows, 135
+rescaled, 187 candidates left untouched; Panel B 125 rescaled, 92 left untouched. Signals within 10 sessions
+either side of a split ex-date are skipped (a deliberate quarantine: ex-dates are public in advance). Trades that
+duplicate another trade because one company is listed under two tickers are dropped.
 
 Not available for free and therefore not in the test: intraday bars (so no true opening-range entries or
 low-of-day stops), borrow availability and actual borrow fees, point-in-time fundamentals, delisted stocks
@@ -66,21 +77,25 @@ before 2019.
 
 ## 2. Definitions (his own where he gives them)
 
-- **Liquid universe**: common stock, as-traded close >= $3, 20-day average dollar volume >= $3M. Average 1,967
-  names a day in Panel A (2005-2026), 2,904 in Panel B (2019-2026).
+- **Liquid universe**: common stock, as-traded close >= $3, 20-day average dollar volume >= $3M.
 - **ADR%**: his TC2000 formula, `100*(mean over 20 days of High/Low) - 1`.
 - **Momentum**: his scan measure - close divided by the lowest low of the last 22, 65 and 126 sessions - ranked
   across the liquid universe each day. **Leader** = top 2% on any of the three horizons and ADR >= 4% (he states
-  "top 1-2%"; his actual TC2000 scans used about the top 7%, tested as a variant). Average 63 leaders a day
-  (A), 97 (B).
+  "top 1-2%"; his actual TC2000 scans used about the top 7%, tested as a variant).
 - **Sanity check of the universe** [D]: leaders on 2020-06-15 include TSLA, ZM, MRNA, NKLA, CRWD, PENN, DKNG,
   NIO, NVAX, FSLY, W; on 2021-01-15 NIO, PLUG, QS, MARA, FCEL, BNGO, BLNK, RIOT, GME; on 2023-06-01 PLTR, AI,
   SMCI, CVNA, IONQ, APP, AFRM - the names he was streaming at those times.
-- **Market regime**: QQQ 10-day SMA above the 20-day SMA and both rising (his stricter wording). On 47% of days
-  since 2005 (63% without the "both rising" clause).
+- **Market regime**: QQQ 10-day SMA above the 20-day SMA and both rising (his stricter wording).
 - **R multiple**: net profit per share divided by the initial stop distance. Because the daily-bar stop (about
   1x ADR, 8-9% of price for these names) is two to three times wider than his real low-of-day stops, R numbers
   here are compressed relative to the R multiples he quotes; percentage returns per trade are comparable.
+- **Entry-day handling.** For a fill at the open (EP "buy the open", random-entry control, shorts at the open, a
+  breakout that gaps above its pivot) the whole day's range follows the fill, so daily bars are exact: the trade
+  is stopped that day if the low reaches the stop. For a fill later in the day (a breakout through the pivot, the
+  opening-range proxy) the order of the day's high and low is unknown, and results are bracketed: *worst case*
+  (entry-day low at or below the stop = stopped), *close-based* (stopped only if the day closes below the stop -
+  this forgives every intraday touch that recovered, so it is the optimistic bound) and, for reference, *entry-day
+  low ignored*. The truth lies between the worst case and the close-based figure.
 
 ### Fidelity of each rule
 
@@ -89,140 +104,133 @@ before 2019.
 | Top 1-2% by 1/3/6-month move, ADR filter, liquidity | exactly as above | faithful |
 | 2-week to 2-month consolidation, higher lows, tightening, surfing 10/20-day | pivot = highest high of the last 40 sessions, set >= 5 sessions ago; pullback <= 5 ADR; 5-day range < 20-day range; low of last 5 days above low of prior 5; close > SMA20 and SMA50, SMA10 > SMA20 > SMA50 | proxy (shape rules are a crude stand-in for his eye) |
 | Buy the opening-range high on the breakout day | buy-stop at the pivot: fill = max(pivot, open); skipped if that is > 1 ADR above the prior close (his "don't chase" rule) | proxy - daily bars cannot see the opening range |
-| Stop at the low of the day, never wider than 1 ADR | stop = entry - 1 x ADR (0.5 and 1.5 as variants); entry-day ambiguity bracketed three ways | proxy |
+| Stop at the low of the day, never wider than 1 ADR | stop = entry - 1 x ADR (0.5 and 1.5 as variants); entry day bracketed as described above | proxy |
 | Sell 1/3-1/2 after 3-5 days, stop to breakeven | sell 1/3 at the first profitable close on/after the 3rd session after entry, then stop = entry | faithful |
 | Trail the rest on the 10-day (or 20-day); exit on first close below | exit at the next open after a close below the SMA | faithful |
 | Breakouts only when the market is "on" | regime filter above | faithful |
-| EP: gap >= 10% on huge volume, buy opening-range high, stop low of day | three versions: buy the open; an opening-range proxy; buy the close of a gap day that had >= 3x volume and closed in the top half of its range, stop = that day's low (bounded 0.25-1.5 ADR) | open/ORB versions are proxies; the close version is exact for what it is, but it is a later, more conservative entry than his |
-| Parabolic short: +50-100% (large) / +300-1000% (small) in days, 3-5 up days, short the first crack, stop high of day, cover at 10/20-day | "parabolic" = 5-day gain >= 100%, >= 3 consecutive up closes, >= 30% above SMA10, day dollar volume >= $10M; (a) short next open with a +30% stop, (b) short the close of the first red day, stop = high of the run; cover at the 10-day SMA or after 10 days | proxy |
+| EP: gap >= 10% on huge volume, buy opening-range high, stop low of day | three versions: buy the open (exact on daily bars); an opening-range proxy (bracketed); buy the close of a gap day that had >= 3x volume and closed in the top half of its range, stop = that day's low (bounded 0.25-1.5 ADR) | open version exact but earlier and cruder than his entry; ORB version a proxy; close version exact but later and more conservative than his |
+| Parabolic short: +50-100% (large) / +300-1000% (small) in days, 3-5 up days, short the first crack, stop high of day, cover at 10/20-day | "parabolic" = 5-day gain >= 100%, >= 3 consecutive up closes, >= 30% above SMA10, day dollar volume >= $10M; (a) short next open with a +30% stop (exact on daily bars), (b) short the close of the first red day, stop = high of the run (bounded to 5-100% above the entry); cover at the 10-day SMA or after 10 days | proxy |
 | Discretionary selection ("I pass on most setups"), themes, catalysts, position pyramiding | not coded | **not testable** |
-
 ---
 
 ## 3. Results
 
 Costs unless stated: 15 bp per fill for longs (entry, partial, final exit); 50 bp per fill plus 50% a year borrow
-for shorts. Panel A, 2005-01-03 -> 2026-11-17 unless stated.
+for shorts. Panel A, 2005-01-03 -> 2026-11-17 unless stated. Complete tables are in "Generated result tables"
+at the end of this file (T1-T6); the paragraphs here give the reading.
 
-### 3.1 What the scan universe does on its own [D]
+### 3.1 What the scan universe does on its own [D] (table T1)
 
 20-day forward return minus SPY, equal-weighted across names each day (t-stats use daily cross-sectional means,
-deflated for overlapping windows):
-
-| Group | 2005-2026 | 2005-2012 | 2013-2018 | 2019-2021 | 2022-2026 |
-|---|---|---|---|---|---|
-| Liquid universe | -0.07% (t -0.5) | +0.37% | -0.13% | -0.30% | -0.58% |
-| ... with ADR >= 4% | -0.21% (t -0.7) | +0.29% | -0.20% | -0.46% | -0.96% |
-| **Leaders (top 2% any horizon, ADR >= 4%)** | **-1.13% (t -2.4)** | -0.06% | -0.68% | -0.93% | **-3.62% (t -3.4)** |
-| Top 2% by 1-month gain | -1.75% (t -3.1) | -0.06% | -1.20% | -2.21% | -5.24% (t -4.2) |
-| Top 2% by 3-month gain | -1.49% (t -2.6) | -0.15% | -1.12% | -1.17% | -4.49% |
-| Top 2% by 6-month gain | -1.32% (t -2.4) | -0.15% | -0.80% | -0.69% | -4.32% |
-| Top 7% any horizon (his real scan cut-off) | -0.42% (t -1.1) | +0.24% | -0.30% | -0.54% | -1.69% (t -2.2) |
-| Academic 12-2 momentum, top decile | +0.16% (t +0.5) | +0.29% | +0.10% | +0.37% | -0.14% |
-| Academic 12-2 momentum, bottom decile | -0.33% (t -0.8) | +0.53% | -0.60% | -0.24% | -1.53% |
-
-Leaders also lagged at 5 days (-0.40%, t -3.2) and 60 days (-1.45%, t -1.0; -7.0% in 2022-2026). On the
-delisting-inclusive Panel B (2019-07 -> 2026-01) leaders lagged by 2.52% over 20 days (t -2.3).
+deflated for overlapping windows): liquid universe -0.07% (t -0.5); **leaders (top 2% on any horizon, ADR >= 4%)
+-1.13% (t -2.4)**, by era -0.06% / -0.68% / -0.93% / **-3.62% (t -3.4)**; top 2% by 1-month gain -1.75% (t -3.1)
+and -5.25% in 2022-2026 (t -4.2); top 7% (his real scan cut-off) -0.42% (t -1.1); academic 12-2 momentum top decile
++0.16% (t +0.5), bottom decile -0.33%. Leaders also lagged at 5 days (-0.30%, t -2.0) and 60 days (-1.45%, t -1.0;
+-7.0% in 2022-2026). On the delisting-inclusive Panel B (2019-07 -> 2026-01) leaders lagged by 2.55% over 20 days
+(t -2.4) and by 3.43% in 2022-2026 (t -3.0). Average 63 leaders a day in Panel A (liquid universe 1,967), 98 in
+Panel B (2,908).
 
 Inference: the extreme-winner, high-volatility corner he fishes in is exactly where the literature's lottery /
 MAX effect and short-term reversal live; plain momentum (12-2, deciles) is a different, milder thing. His
 method therefore is not "ride momentum"; it is "pick the few continuations out of a pool that on average
-reverts", and the pool has become markedly worse since 2022.
+reverts". The pool looks markedly worse since 2022 on both panels (Panel B: -1.1% in 2019-2021, -3.4% in
+2022-2026), though on Panel A part of the era difference is a survivorship artefact (section 4).
 
-### 3.2 Breakouts [D]
+### 3.2 Breakouts [D] (table T2)
 
-Event view (regime on, 1,504 signals): from the pivot fill to the same day's close +0.50% on average (median
-+0.13%, 51% up); fill to +1 day minus SPY +0.14%; to +5 days -0.37%; to +20 days -1.18% (median -2.95%).
-Breakouts bought at the close after confirmation: +1 day -0.16%, +5 days -0.66%, +20 days -1.97% versus SPY.
-The entry day's low was a median 4.2% below the fill; it was at least 1 ADR below the fill on 9% of days and at
-least 0.5 ADR below on 62% - which is why a low-of-day stop cannot be modelled from daily bars.
+Event view (regime on, 1,520 signals): from the pivot fill to the same day's close +0.50% on average (median
++0.13%, 51% up); fill to +5 days minus SPY -0.44%; to +20 days -1.33% (median -2.96%). Breakouts bought at the
+close after confirmation: +5 days -0.72%, +20 days -2.25% versus SPY. The entry day's low was a median 4.2% below
+the fill; it was at least 1 ADR below the fill on 9% of days and at least 0.5 ADR below on 62% - which is why a
+low-of-day stop cannot be modelled from daily bars.
 
-Trade results (R per trade, net):
+Trade results (R per trade, net of 15 bp per fill):
 
-| Variant | Trades | Win rate | Avg R | t | Avg return | 2005-12 | 2013-18 | 2019-21 | 2022-26 |
+| Variant | Trades | Win rate | Avg R | t naive / month-clustered | Avg return | 2005-12 | 2013-18 | 2019-21 | 2022-26 |
 |---|---|---|---|---|---|---|---|---|---|
-| **Q0 baseline** (pivot stop-entry, 1 ADR stop, regime on, entry-day handling "close-based") | 1,463 | 44.0% | **-0.062** | -1.6 | -0.44% | +0.03 | -0.06 | -0.03 | -0.16 |
-| Q0, entry day pessimistic (low <= stop => out) | 1,464 | 41.7% | -0.111 | -3.0 | -0.82% | -0.02 | -0.12 | -0.09 | -0.19 |
-| Q0, entry day optimistic (entry-day low ignored) | 1,463 | 44.0% | -0.067 | -1.8 | -0.48% | +0.03 | -0.07 | -0.04 | -0.17 |
-| C0 close-confirmed entry, low-of-day stop | 911 | 40.0% | -0.204 | -3.9 | -1.15% | -0.34 | -0.22 | -0.14 | -0.13 |
-| Q0 without regime filter | 2,677 | 45.1% | -0.027 | -1.0 | -0.27% | +0.00 | +0.03 | +0.01 | -0.12 |
-| Q0 top 7% leaders | 3,620 | 42.3% | -0.079 | -3.2 | -0.35% | -0.07 | -0.09 | +0.02 | -0.16 |
-| Q0 consolidation 10-40 days only | 546 | 44.0% | +0.010 | +0.1 | -0.03% | +0.15 | +0.17 | +0.05 | -0.26 |
-| Q0 stop 0.5 ADR | 1,470 | 32.7% | -0.029 | -0.4 | -0.11% | +0.11 | +0.03 | -0.03 | -0.19 |
-| Q0 zero cost | 1,463 | 48.1% | -0.019 | -0.5 | -0.14% | +0.08 | -0.01 | +0.00 | -0.12 |
-| **Control: random entry at the open in trending leaders, regime on, same exits** (20 seeds, ~3,700 trades each) | - | 39.0% | **-0.051** (range -0.11 to +0.03) | - | -0.49% | | | | |
+| **Q0 baseline**: pivot stop-entry, 1 ADR stop, regime on - entry day resolved by the close (optimistic bound) | 1,478 | 43.8% | **-0.070** | -1.9 / -1.6 | -0.5% | +0.02 | -0.07 | -0.04 | -0.17 |
+| Q0, entry day worst case (low at or below the stop = out) | 1,479 | 41.5% | **-0.118** | -3.2 | -0.9% | -0.03 | -0.13 | -0.09 | -0.20 |
+| C0 close-confirmed entry, low-of-day stop (no entry-day ambiguity) | 918 | 39.7% | -0.210 | -4.0 / -3.8 | -1.2% | -0.34 | -0.22 | -0.14 | -0.15 |
+| Q0 without regime filter | 2,694 | 45.0% | -0.024 | -0.9 | -0.2% | -0.01 | +0.03 | +0.01 | -0.10 |
+| Q0 top 7% leaders | 3,666 | 42.3% | -0.082 | -3.4 | -0.4% | -0.07 | -0.09 | +0.03 | -0.17 |
+| Q0 consolidation 10-40 days only (best of 27) | 548 | 43.8% | +0.006 | +0.1 | -0.1% | +0.15 | +0.17 | +0.05 | -0.28 |
+| Q0 stop 0.5 ADR | 1,485 | 32.3% | -0.045 | -0.7 | -0.2% | +0.09 | +0.02 | -0.03 | -0.21 |
+| Q0 zero cost | 1,478 | 47.8% | -0.027 | -0.7 | -0.2% | +0.08 | -0.02 | +0.00 | -0.14 |
+| Q0 50 bp per fill | 1,478 | 34.6% | -0.169 | -4.5 | -1.2% | -0.10 | -0.18 | -0.12 | -0.25 |
+| **Control: random entry at the open in trending leaders, regime on, same exits** (20 seeds, ~3,700 trades each; exact) | - | 38.3% | **-0.070** (range -0.13 to +0.01) | - | -0.7% | | | | |
 
-All 27 variants (leader cut-off, momentum definition, ADR floor, liquidity floor, consolidation length and depth,
-tightness, volume dry-up, extension rule, stop width, partial size, breakeven on/off, 10- vs 20-day trail, costs
-0-50 bp) are in `results/breakout_variants.csv`; the full table is reproduced in the appendix. The best is +0.01R
-(t = +0.15); none has a t-stat above +0.2.
+The true result of the baseline lies between its two entry-day rows, -0.12R to -0.07R. All 27 variants (leader
+cut-off, momentum definition, ADR floor, liquidity floor, consolidation length and depth, tightness, volume
+dry-up, extension rule, stop width, partial size, breakeven on/off, 10- vs 20-day trail, costs 0-50 bp) are in
+table T2; they range from -0.21R to +0.01R and none has a t-stat above +0.1.
 
-Other facts [D]: average holding 5.6 sessions; 64% of exits are stops, 35% trailing exits; average stop distance
-8.6% of price. **Profit concentration**: the baseline's total is -90.7R; the top 10 trades made +86.7R, the top 1%
-(14 trades) +109.6R, all the others -200.3R. Best trades are recognisable leaders (VKTX Feb 2024 +18.2R / +137%,
-EH Jan 2021, NVAX Jun 2020, AFRM Nov 2023, SMCI May 2023).
+Other facts [D]: average holding 5.6 sessions; 66% of exits are stops, 34% trailing exits; average stop distance
+8.6% of price. **Profit concentration**: the baseline's total is -102.8R; the top 10 trades made +86.7R, the top 1%
+(14 trades) +109.6R, all the others -212.5R. Best trades are recognisable leaders (VKTX Feb 2024 +18.2R / +137%,
+EH Jan 2021, NVAX Jun 2020, MNKD May 2013, AFRM Nov 2023).
 
-Q0 by calendar year (average R): 2005 +0.22, 2006 +0.03, 2007 -0.06, 2008 -0.12, 2009 -0.03, **2010 +0.40**, 2011
--0.39, 2012 +0.02, **2013 +0.25**, 2014 -0.20, 2015 -0.24, 2016 +0.15, 2017 -0.32, 2018 -0.15, 2019 -0.07,
-**2020 +0.13**, 2021 -0.20, **2022 -0.39**, 2023 -0.18, 2024 -0.19, 2025 +0.14, 2026 -0.33 (to mid-November).
+Q0 by calendar year (average R): 2005 +0.12, 2006 +0.03, 2007 -0.06, 2008 -0.12, 2009 -0.03, **2010 +0.40**, 2011
+-0.39, 2012 +0.02, **2013 +0.24**, 2014 -0.20, 2015 -0.24, 2016 +0.14, 2017 -0.33, 2018 -0.15, 2019 -0.08,
+**2020 +0.13**, 2021 -0.20, **2022 -0.38**, 2023 -0.18, 2024 -0.20, 2025 +0.12, 2026 -0.39 (to mid-November).
 
 Inference: (a) the breakout trigger adds a small same-day pop (+0.5%) and nothing afterwards; under identical
-trade management it is indistinguishable from buying the same stocks on random days. (b) The yearly pattern
-matches practitioner folklore - 2010, 2013, 2016, 2020 good; 2011, 2015, 2017, 2022 bad - so the test is
-picking up the same regime the discretionary traders feel, just without their profits. (c) The P&L shape he
-describes (most trades lose a little, a handful pay for everything) is reproduced, but mechanically the handful
-does not cover the rest. (d) The regime filter did not help in this test (-0.06R with it, -0.03R without).
+trade management it is indistinguishable from buying the same stocks on random days (-0.07R both). (b) The
+yearly pattern matches practitioner folklore - 2010, 2013, 2016, 2020 good; 2011, 2015, 2017, 2022 bad - so the
+test is picking up the same regime the discretionary traders feel, just without their profits. (c) The P&L
+shape he describes (most trades lose a little, a handful pay for everything) is reproduced, but mechanically the
+handful does not cover the rest. (d) The regime filter did not raise the per-trade expectancy in this test
+(-0.07R with it, -0.02R without); what it did was reduce activity in bad years (portfolio 2022: -12.0% with the
+filter, -20.1% without).
 
-### 3.3 Episodic pivots [D]
+### 3.3 Episodic pivots [D] (table T3)
 
 Event study - return after the gap-day close, minus SPY (liquid common stocks, gap = open vs prior close >= 10%):
 
 | Subset | Events | Gap-day open->close | +5 days | +20 days | +60 days |
 |---|---|---|---|---|---|
-| All gaps >= 10% | 19,398 | -0.89% | -1.47% | **-3.05%** (median -3.07%, t ~ -5.9) | -2.50% |
-| Volume >= 3x average and >= $10M traded | 11,529 | +0.65% | -1.80% | -3.78% (t ~ -5.6) | -4.40% |
+| All gaps >= 10% | 19,402 | -0.89% | -1.48% | **-3.06%** (median -3.08%, t ~ -5.9) | -2.52% |
+| Volume >= 3x average and >= $10M traded | 11,531 | +0.65% | -1.82% | -3.80% (t ~ -5.6) | -4.41% |
 | ... and closed strong (above open, top half of range) | 4,658 | +10.52% | -1.40% | -2.22% (t ~ -3.1) | -2.35% |
-| ... but closed below the open | 5,659 | -8.33% | -2.06% | -4.61% | -5.59% |
+| ... but closed below the open | 5,660 | -8.34% | -2.06% | -4.62% | -5.60% |
 | **Earnings reaction day** | 4,737 | +1.28% | -0.19% | **+0.38%** (median -0.06%, t ~ +0.6) | +0.68% |
-| **Not an earnings day** | 6,792 | +0.21% | -2.93% | **-6.66%** (t ~ -6.6) | -7.97% |
+| **Not an earnings day** | 6,794 | +0.21% | -2.95% | **-6.68%** (t ~ -6.7) | -8.00% |
 | Earnings + strong close | 2,217 | +7.36% | -0.26% | +0.48% (t ~ +0.2) | +0.71% |
 | Earnings + EPS surprise >= +20% | 2,178 | +1.67% | -0.12% | +0.61% | +0.49% |
-| Gap 10-20% / 20-40% / >= 40% | 8,069 / 2,615 / 845 | | | -2.02% / -5.50% / -15.27% | |
+| Gap 10-20% / 20-40% / >= 40% | 8,070 / 2,615 / 846 | | | -2.03% / -5.50% / -15.36% | |
 | "Neglected" (prior 6-month return within +/-30%) | 5,470 | | -0.46% | -1.29% | -1.94% |
-| Already extended (prior 6 months > +50%) | 2,638 | | -3.43% | -6.76% | -8.05% |
-| Volume >= 10x | 2,882 | | -4.34% | -8.09% | -12.48% |
+| Already extended (prior 6 months > +50%) | 2,640 | | -3.48% | -6.81% | -8.11% |
+| Volume >= 10x | 2,881 | | -4.33% | -8.08% | -12.46% |
 
-By era, +20 days, volume-qualified gaps: 2005-12 +0.49%, 2013-18 -2.16%, 2019-21 -4.14%, 2022-26 -5.47%;
+By era, +20 days, volume-qualified gaps: 2005-12 +0.49%, 2013-18 -2.16%, 2019-21 -4.14%, 2022-26 -5.50%;
 earnings gaps only: +1.28%, +1.00%, -0.59%, +0.11%.
 
 Trade results:
 
-| Variant | Trades | Win rate | Avg R | t | Avg return | 2005-12 | 2013-18 | 2019-21 | 2022-26 |
+| Variant | Trades | Win rate | Avg R | t naive / month-clustered | Avg return | 2005-12 | 2013-18 | 2019-21 | 2022-26 |
 |---|---|---|---|---|---|---|---|---|---|
-| Buy the close of a strong EP day, low-of-day stop, his 3-5 day / 10-day rules | 4,538 | 41.1% | -0.111 | -5.2 | -1.2% | -0.10 | -0.15 | -0.20 | -0.06 |
-| ... earnings gaps only | 2,215 | 45.6% | -0.052 | -1.9 | -0.2% | -0.08 | -0.10 | -0.12 | -0.00 |
+| Buy the close of a strong EP day, low-of-day stop, his 3-5 day / 10-day rules | 4,538 | 41.1% | -0.111 | -5.2 / -3.6 | -1.2% | -0.10 | -0.15 | -0.20 | -0.06 |
+| ... earnings gaps only | 2,215 | 45.6% | -0.052 | -1.9 / -1.4 | -0.2% | -0.08 | -0.10 | -0.12 | -0.00 |
 | ... earnings only, 20-day trail | 2,214 | 45.3% | -0.015 | -0.5 | -0.0% | -0.04 | -0.07 | -0.08 | +0.04 |
-| **... earnings only, 50-day trail, no partial, no breakeven stop** | 2,198 | 25.3% | **+0.250** | +3.2 | +1.2% | +0.39 | +0.14 | +0.19 | +0.27 |
-| ... all gaps, 50-day trail, no partial/breakeven | 4,482 | 23.7% | +0.155 | +2.3 | +0.2% | +0.26 | -0.05 | +0.13 | +0.21 |
+| **... earnings only, 50-day trail, no partial, no breakeven stop** | 2,198 | 25.3% | **+0.248** | +3.1 / **+2.5** | +1.2% | +0.39 | +0.14 | +0.19 | +0.26 |
+| ... all gaps, 50-day trail, no partial/breakeven | 4,482 | 23.6% | +0.153 | +2.3 | +0.2% | +0.26 | -0.05 | +0.13 | +0.21 |
 | ... non-earnings gaps only | 2,333 | 36.9% | -0.165 | -5.1 | -2.1% | -0.14 | -0.20 | -0.24 | -0.12 |
-| Buy the open, 1 ADR stop - entry day pessimistic | 18,089 | 30.1% | -0.116 | -8.1 | -1.4% | -0.20 | -0.18 | -0.08 | -0.09 |
-| Buy the open, 1 ADR stop - entry day close-based | 17,936 | 36.3% | +0.077 | +4.1 | -0.4% | -0.05 | +0.09 | +0.05 | +0.13 |
-| Opening-range proxy (buy open + 0.25 ADR, stop open - 0.25 ADR) - pessimistic | 13,566 | 12.0% | **-0.469** | -21.6 | -2.0% | | | | |
-| Opening-range proxy - close-based | 13,278 | 31.7% | **+0.605** | +13.7 | +1.2% | | | | |
-| Opening-range proxy - optimistic | 13,204 | 32.3% | +0.003 | +0.1 | -0.7% | | | | |
+| **Buy the open of every gap, 1 ADR stop (exact on daily bars)** | 18,099 | 30.0% | **-0.117** | -8.2 | -1.4% | -0.20 | -0.18 | -0.08 | -0.09 |
+| ... earnings gaps only (exact) | 6,637 | 31.3% | -0.043 | -1.8 | -0.3% | -0.03 | -0.08 | +0.01 | -0.05 |
+| Opening-range proxy (buy open + 0.25 ADR, stop open - 0.25 ADR) - worst case | 13,573 | 12.0% | **-0.470** | -21.7 | -2.0% | | | | |
+| Opening-range proxy - entry day resolved by the close (optimistic bound) | 13,283 | 31.6% | **+0.604** | +13.7 | +1.2% | | | | |
+| Opening-range proxy - entry-day low ignored | 13,208 | 32.3% | +0.003 | +0.1 | -0.7% | | | | |
 
 Earnings EP with 20-day trail by year (avg R): 2005 +0.48, 2006 -0.18, 2007 -0.00, 2008 -0.31, 2009 -0.12, 2010
 -0.03, 2011 -0.15, 2012 +0.10, 2013 -0.17, 2014 -0.17, 2015 -0.33, 2016 +0.12, 2017 +0.09, 2018 -0.07, 2019 -0.16,
 2020 -0.04, 2021 -0.03, 2022 -0.14, **2023 +0.30**, 2024 +0.10, 2025 +0.08, 2026 -0.17.
 
 Anatomy of the one profitable variant (earnings gaps, close entry, 50-day trail; the 1,634 trades the portfolio run
-actually took) [D]: total +325R, of which the 20 best trades made +410R - without them the
-rule is net negative. 67% of trades were roughly full 1R losses, 5.5% made 5R or more, 2.3% made 10R or
-more. The big winners are the textbook cases from his own model book: NVDA May 2016 (+136% over 197 sessions,
-+43.8R), LULU Sep 2010 (+125%), TSLA Oct 2019 (+119%), AMZN Apr 2007, FSLR Feb 2007, TWLO Feb 2018, ENPH May
-2019, SMCI Jan 2024 and May 2023, PLTR May 2023, META Jul 2013. Caveat: 5% of the trades left through the
-trailing rule within two sessions because the stock was still below its 50-day average when bought (a quirk of
-applying a 50-day trail to beaten-down names; those trades averaged -0.07R).
+actually took) [D]: total +322R, of which the 20 best trades made +410R - without them the rule is net negative.
+67% of trades were roughly full 1R losses, 5.5% made 5R or more, 2.3% made 10R or more. The big winners are the
+textbook cases from his own model book: NVDA May 2016 (+136% over 197 sessions, +43.8R), LULU Sep 2010 (+125%),
+TSLA Oct 2019 (+119%), AMZN Apr 2007, FSLR Feb 2007, TWLO Feb 2018, AXON Feb 2018, MRVL Mar 2026. In the standard
+short-term version the largest winners include APT, the mask maker he names as a February 2020 EP (+155% in ten
+sessions, +10.9R).
 
 Inference: (a) "A big gap on big volume" by itself is a sell signal on average, strongly so for non-earnings news,
 huge gaps, huge volume and already-extended stocks - the population is dominated by promotions, offerings and
@@ -230,75 +238,75 @@ one-day squeezes. (b) Earnings gaps are the exception but the post-gap drift is 
 days) and statistically indistinguishable from zero here, consistent with the papers reporting that
 post-earnings drift has faded in liquid stocks. (c) The only profitable formulation is the patient one - earnings
 gaps that close strong, held with a wide trail and without the breakeven stop - which is a positively skewed bet
-(25% winners averaging about +4R). It is one of about 20 variants tried, so some of its t = 3.2 is selection.
+(25% winners averaging about +4R). It is one of about 20 variants tried, so some of its t = 2.5-3.1 is selection.
 (d) His standard short-term management (partials, breakeven, 10-day trail) turns the same entries into a small
 loser on daily bars: it cuts the right tail that is the whole source of profit. His blog does allow trailing EPs
 on the 20/50-day. (e) "Neglected" stocks did better than extended ones, as he says, but still not positive.
-(f) The opening-range rows show that the true result of his actual entry is unknowable from daily data.
+(f) The opening-range rows show that the true result of his actual entry is unknowable from daily data; the one
+intraday-free statement available is that simply buying the open of every qualifying gap loses.
 
-### 3.4 Parabolic shorts [D]
+### 3.4 Parabolic shorts [D] (table T4)
 
 Event study - profit of a short opened at the next open after a parabolic close, no stop, no costs:
 
 | Definition | Events | +1 day | +5 days | +10 days | +20 days | Worst 5-day |
 |---|---|---|---|---|---|---|
-| 5-day gain >= 100%, >= 3 up closes, >= 30% over SMA10 | 1,387 | mean +3.3%, median +8.9%, 66% win | mean +6.7%, **median +15.6%, 71% win** | +10.8% / +20.8% / 72% | +12.7% / +25.6% / 73% | **-1,701%** |
-| 5-day gain >= 200% | 447 | +8.6% / +14.7% / 68% | +11.3% / +23.3% / 74% | +21.0% / +31.6% / 77% | +23.7% / +39.0% / 78% | -675% |
-| 5-day gain >= 60% | 3,084 | +2.4% / +4.7% / 62% | +4.3% / +9.3% / 65% | +6.4% / +12.2% / 66% | +7.9% / +16.7% / 67% | -1,701% |
-| 5-day gain >= 50% with >= $200M traded (liquid names) | 1,308 | +2.6% / +4.4% / 62% | +4.6% / +8.7% / 65% | +8.0% / +12.7% / 67% | +9.9% / +17.7% / 69% | -581% |
+| 5-day gain >= 100%, >= 3 up closes, >= 30% over SMA10 | 1,391 | mean +3.3%, median +8.9%, 67% win | mean +6.8%, **median +15.8%, 71% win** | +10.8% / +20.8% / 72% | +12.8% / +25.6% / 73% | **-1,701%** |
+| 5-day gain >= 200% | 449 | +8.7% / +15.1% / 68% | +11.5% / +23.3% / 74% | +21.1% / +31.6% / 77% | +23.7% / +39.0% / 78% | -675% |
+| 5-day gain >= 60% | 3,093 | +2.3% / +4.7% / 62% | +4.4% / +9.4% / 65% | +6.4% / +12.2% / 66% | +8.0% / +16.7% / 67% | -1,701% |
+| 5-day gain >= 50% with >= $200M traded (liquid names) | 1,311 | +2.6% / +4.4% / 62% | +4.6% / +8.7% / 65% | +8.1% / +12.8% / 67% | +10.1% / +17.8% / 69% | -581% |
 
-By era (5-day gain >= 100%, +5 days): 2005-12 n=100 mean +11.9%, 69% win; 2013-18 n=227 +13.1%, 72%; 2019-21 n=532
-+9.3%, 77%; 2022-26 n=1,132 +7.1%, 68%. The number of qualifying events exploded: about 10 a year before 2016,
-184 in 2020, 237 in 2025.
+The short side worked in every era (trade table below: +0.32R, +0.26R, +0.20R, +0.09R). The number of qualifying
+trades exploded: about 10-40 a year before 2019, 184 in 2020, 240 in 2025 (first-red-day version).
 
 Trade results:
 
-| Variant | Trades | Win rate | Avg R | t | Avg return on position | Worst trade |
+| Variant | Trades | Win rate | Avg R | t naive / month-clustered | Avg return on position | Worst trade |
 |---|---|---|---|---|---|---|
-| **Short next open, hard stop +30%**, cover at 10-day SMA or day 10 (entry day pessimistic) | 1,570 | 60.7% | **+0.171** | +6.5 | **+5.1%** | -112% |
-| ... stop +50% / +100% | 1,498 / 1,416 | 67.6% / 73.9% | +0.079 / +0.044 | +4.1 / +3.8 | +3.9% / +4.4% | -161% / -303% |
-| Short the close of the first red day, stop = high of the run, cover at 10-day SMA | 1,361 | 67.7% | +0.047 | +1.6 | +2.2% | -422% |
-| ... zero costs | 1,362 | 70.6% | +0.140 | +5.4 | +4.0% | |
-| ... 100 bp per fill, 100% borrow | 1,361 | 65.2% | -0.047 | -1.3 | +0.3% | |
-| ... 100 bp per fill, 300% borrow | 1,361 | 58.0% | -0.197 | -4.4 | -3.1% | |
-
-Era split for the +30% stop rule (avg R): +0.32, +0.28, +0.23, +0.11 - positive throughout, fading.
+| **Short next open, hard stop +30%**, cover at 10-day SMA or day 10 (exact on daily bars) | 1,609 | 59.5% | **+0.147** | +5.7 / **+5.1** | **+4.4%** | -112% |
+| ... stop +50% / +100% | 1,518 / 1,424 | 66.9% / 73.8% | +0.069 / +0.042 | +3.6 / +3.6 | +3.4% / +4.2% | -161% / -303% |
+| Short the close of the first red day, stop = high of the run, cover at 10-day SMA | 1,366 | 67.5% | +0.072 | +2.8 / +2.3 | +2.0% | -422% |
+| ... zero costs | 1,367 | 70.4% | +0.141 | +5.5 | +3.8% | |
+| ... 100 bp per fill, 100% borrow | 1,366 | 65.0% | +0.003 | +0.1 | +0.1% | |
+| ... 100 bp per fill, 300% borrow | 1,366 | 57.8% | -0.122 | -4.6 | -3.3% | |
 
 The left tail is real, not a data artefact: the largest adverse moves within five days of the signal were checked
 bar by bar - QMMM (Sep 2025, close 11.3 -> 207 the next session), DRUG (Oct 2024, 2.49 -> 38.5), HKD (Jul-Aug
-2022, 180 -> 1,680), MRIN (Jun 2021, 21 -> 104), SAVA (Feb 2021, 23 -> 88), INDO (Feb-Mar 2022). One case (CLEU,
-Jan 2025) was a vendor scaling error and is removed by the cleaning rules.
+2022, 180 -> 1,680), MRIN (Jun 2021, 21 -> 104), SAVA (Feb 2021, 23 -> 88), INDO (Feb-Mar 2022).
 
 Inference: this is the one setup where a blind rule shows a statistically solid edge, in line with the
 short-term-reversal and lottery-stock literature. But (a) the names are overwhelmingly micro-caps where shares to
 borrow are often unavailable and fees of 100-1,000% a year are normal, so the fills assumed here frequently could
 not be had; (b) at 1% slippage per fill and 100% borrow the edge is gone; (c) one unhedged squeeze can cost several
-times the position; (d) the edge has roughly halved since 2022 as the number of such events exploded. Position
-sizes must therefore be tiny, which caps what the setup can contribute.
+times the position, and even a hard stop is gapped through (worst trade -112% of the position); (d) the edge per
+trade has fallen by two thirds since the early years (+0.32R to +0.09R) as the number of such events exploded.
+Position sizes must therefore be tiny, which caps what the setup can contribute.
 
-### 3.5 Survivorship check [D]
+### 3.5 Delisting-inclusive data against survivors only [D] (tables T2-T4)
 
 Same code, same window (2019-07-01 -> 2026-01-28), two datasets:
 
-| Measure | Panel B (with 5,397 dead tickers) | Panel A (survivors only) |
+| Measure | Panel B (with 5,448 dead tickers) | Panel A (survivors only) |
 |---|---|---|
-| Breakout Q0, avg R (trades) | -0.066 (710) | -0.088 (675) |
-| Breakout close-confirmed, avg R | -0.147 (425) | -0.110 (397) |
-| Random-entry control, avg R | -0.015 | +0.014 |
-| Gaps (volume-qualified), +20 days vs SPY | -3.74% (7,583 events) | -4.41% (6,686) |
-| ... earnings gaps | +0.15% (2,609) | -0.12% (2,393) |
-| ... non-earnings gaps | -5.84% (4,974) | -6.80% (4,293) |
-| EP bought at close, standard rules, avg R | -0.075 (2,925) | -0.088 (2,551) |
-| Earnings EP, standard rules | +0.037 (1,213) | +0.006 (1,121) |
-| Earnings EP, 50-day trail | +0.423, t 2.8, +1.9% per trade (1,202) | +0.317, t 2.7, +1.6% (1,111) |
-| Parabolic short, +30% stop | +0.122, t 4.2, +3.7% per trade (1,236) | +0.151, t 4.9, +4.5% (1,136) |
-| Parabolic short, first red day | -0.020, +1.5% per trade (1,082) | +0.057, +2.3% (987) |
+| Breakout Q0, avg R, optimistic bound / worst case (trades) | -0.054 / -0.093 (735) | -0.092 / -0.131 (677) |
+| Breakout close-confirmed, avg R | -0.121 (436) | -0.115 (399) |
+| Random-entry control, avg R | -0.046 | -0.005 |
+| Gaps (volume-qualified), +20 days vs SPY | -3.67% (7,594 events) | -4.43% (6,688) |
+| ... earnings gaps | +0.06% (2,640) | -0.12% (2,393) |
+| ... non-earnings gaps | -5.72% (4,954) | -6.83% (4,295) |
+| EP bought at the open (exact), avg R | -0.058 (11,808) | -0.060 (10,431) |
+| EP bought at close, standard rules, avg R | -0.075 (2,937) | -0.088 (2,551) |
+| Earnings EP, standard rules | +0.029 (1,226) | +0.006 (1,121) |
+| Earnings EP, 50-day trail | +0.330, t 3.0 naive / 2.1 clustered, +1.6% per trade (1,215) | +0.317, t 2.7, +1.6% (1,111) |
+| Parabolic short, +30% stop | +0.104, t 3.7 naive / 2.8 clustered, +3.1% per trade (1,285) | +0.128, t 4.2, +3.8% (1,166) |
+| Parabolic short, first red day | +0.055, +1.5% per trade (1,103) | +0.072, +2.0% (992) |
 
-Inference: for trades that last days to weeks behind a stop, including dead stocks changes nothing material;
-differences are inside the noise and not systematically in favour of the survivors-only data. The long-history
-Panel A results are therefore usable. (This would not hold for buy-and-hold tests.)
+Inference: for trades that last days to weeks behind a stop, including dead stocks changes nothing material in
+this window; differences are inside the noise and not systematically in favour of the survivors-only data. This
+supports using the long-history panel for the level of the results, with the caution on era comparisons in
+section 4. (It would not hold for buy-and-hold tests.)
 
-### 3.6 Portfolio level [D]
+### 3.6 Portfolio level [D] (table T5)
 
 $100,000 start, 0.5% of equity risked per trade, signals taken in priority order until a limit binds.
 Longs: max 20% (breakouts) or 10% (EPs) per position, max 100% gross, max 20-25 positions.
@@ -308,46 +316,45 @@ Panel A, 2005-01-03 -> 2026-11-17:
 
 | Strategy | CAGR | Vol | Sharpe | Max drawdown | Final multiple | Avg gross exposure |
 |---|---|---|---|---|---|---|
-| Breakout Q0 (regime filter) | **-2.3%** | 8.1% | -0.47 | -50.5% | 0.60x | 10% |
-| Breakout Q0, 1% risk, 140% gross (his 2020-21 exposure level) | -5.1% | 15.9% | -0.36 | -77.5% | 0.32x | 19% |
+| Breakout Q0 (regime filter; entry day optimistic bound) | **-2.6%** | 8.1% | -0.50 | -51.8% | 0.56x | 10% |
+| Breakout Q0, entry day worst case | -4.1% | 7.9% | -0.72 | -62.8% | 0.40x | 9% |
+| Breakout Q0, 1% risk, 140% gross (his 2020-21 exposure level) | -5.7% | 15.8% | -0.40 | -78.9% | 0.28x | 19% |
 | Earnings EP, close entry, his 3-5 day / 10-day rules | -2.8% | 7.7% | -0.56 | -50.5% | 0.54x | 17% |
-| **Earnings EP, close entry, 50-day trail** | **+4.6%** | 16.7% | 0.25 | -37.4% | 2.67x | 55% |
-| All EPs, close entry, 50-day trail | +2.4% | 25.3% | 0.15 | -66.1% | 1.69x | 71% |
-| **Parabolic short (+30% stop), 50 bp + 50% borrow** | **+6.2%** | 4.9% | 0.89 | -7.5% | 3.73x | 2% |
-| Parabolic short, 100 bp + 150% borrow | +3.3% | 4.9% | 0.32 | -14.4% | 2.02x | 2% |
+| **Earnings EP, close entry, 50-day trail** | **+4.6%** | 16.6% | 0.25 | -37.4% | 2.69x | 55% |
+| All EPs, close entry, 50-day trail | +2.3% | 25.2% | 0.14 | -66.1% | 1.65x | 71% |
+| **Parabolic short (+30% stop), 50 bp + 50% borrow** | **+5.4%** | 5.1% | 0.72 | -8.5% | 3.18x | 2% |
+| Parabolic short, 100 bp + 150% borrow | +2.5% | 5.0% | 0.16 | -15.6% | 1.71x | 2% |
 | SPY buy and hold (total return) | 10.6% | 18.9% | 0.54 | -55.2% | 9.05x | 100% |
-| QQQ buy and hold (total return) | 15.1% | 21.6% | 0.68 | -53.4% | 21.27x | 100% |
+| QQQ buy and hold (total return, data to 2026-09-11) | 15.1% | 21.6% | 0.68 | -53.4% | 21.27x | 100% |
 
-Panel B (delisting-inclusive), 2019-07-01 -> 2026-01-28: Breakout Q0 -4.0% a year (max drawdown -45%); earnings EP
-with 50-day trail +7.0% (vol 22.7%, drawdown -34.7%); earnings EP with his standard rules +1.5%; parabolic short
-+10.7% (Sharpe 0.98; +2.7% with 100 bp and 150% borrow); SPY +15.6%; QQQ +20.8%.
+Panel B (delisting-inclusive), 2019-07-01 -> 2026-01-28: Breakout Q0 -3.5% a year (worst case -5.5%; max drawdown
+-45%); earnings EP with 50-day trail +4.4% (vol 20.6%, drawdown -33.4%); earnings EP with his standard rules +0.8%;
+parabolic short +9.3% (Sharpe 0.78; +1.1% with 100 bp and 150% borrow); SPY +15.6%; QQQ +20.8%.
 
-Calendar years, Panel A (%):
+Selected calendar years, Panel A (%; all years in table T5):
 
 | Year | Breakout Q0 | Earnings EP 50-day trail | Parabolic short | SPY | QQQ |
 |---|---|---|---|---|---|
 | 2008 | -2.0 | -11.1 | +2.8 | -36.8 | -41.7 |
 | 2010 | +10.7 | +13.5 | +2.3 | +15.1 | +20.1 |
-| 2013 | +9.6 | +19.0 | -0.3 | +32.3 | +36.6 |
+| 2013 | +9.6 | +19.0 | -0.8 | +32.3 | +36.6 |
 | 2015 | -4.3 | -20.0 | +2.3 | +1.3 | +9.4 |
-| 2017 | -10.6 | +5.0 | +6.5 | +21.7 | +32.7 |
-| 2019 | -4.6 | +9.1 | +3.1 | +31.2 | +39.0 |
-| 2020 | +9.2 | +18.9 | +35.5 | +18.4 | +48.4 |
-| 2021 | -9.7 | +4.3 | +12.2 | +28.7 | +27.4 |
-| 2022 | -12.0 | -23.8 | +3.8 | -18.2 | -32.6 |
-| 2023 | -6.7 | +40.1 | +0.2 | +26.2 | +54.9 |
-| 2024 | -14.6 | 0.0 | +9.9 | +24.9 | +25.6 |
-| 2025 | +5.9 | -14.6 | +27.8 | +17.7 | +20.8 |
-| 2026 (to 17 Nov) | -6.0 | +5.2 | +11.3 | +8.2 | n/a |
+| 2017 | -11.1 | +5.0 | +6.5 | +21.7 | +32.7 |
+| 2019 | -5.1 | +9.1 | +3.1 | +31.2 | +39.0 |
+| 2020 | +9.2 | +18.9 | +32.8 | +18.4 | +48.4 |
+| 2021 | -9.7 | +4.3 | +9.3 | +28.7 | +27.4 |
+| 2022 | -12.0 | -23.8 | +2.7 | -18.2 | -32.6 |
+| 2023 | -6.7 | +40.1 | -0.3 | +26.2 | +54.9 |
+| 2024 | -15.0 | +0.0 | +7.4 | +24.9 | +25.6 |
+| 2025 | +4.8 | -14.6 | +24.3 | +17.7 | +20.8 |
+| 2026 (to 17 Nov) | -8.3 | +6.1 | +7.9 | +8.2 | n/a |
 
-(All years are in `results/portfolio_yearly_hf.csv`.)
-
-Factor regression of daily excess returns on Mkt-RF, SMB, HML, Mom (2005-2026): earnings-EP portfolio alpha
-+0.3% a year (t = 0.1), market beta 0.39, SMB 0.45, HML -0.08, Mom +0.09, R-squared 0.31; on Panel B 2019-2026 alpha
-0.0% (t = 0.0), beta 0.54, SMB 0.57. Breakout portfolio alpha -4.3% a year (t = -2.6).
+Factor regression of daily excess returns on Mkt-RF, SMB, HML, Mom (2005 to 2026-09): earnings-EP portfolio alpha
++0.4% a year (t = 0.1), market beta 0.39, SMB 0.44, HML -0.08, Mom +0.08, R-squared 0.31; on Panel B 2019-2026 alpha
+-1.1% a year (t = -0.2), beta 0.42, SMB 0.57. Breakout portfolio alpha -4.5% a year (t = -2.7).
 
 Capacity (earnings EP, 50-day trail, each position capped at 1% of 20-day average dollar volume - his stated
-limit): CAGR 4.6% at $100k, 7.3% at $1M, 6.6% at $10M, 3.1% at $100M (average exposure falls to 8% because most
+limit): CAGR 4.6% at $100k, 7.2% at $1M, 6.6% at $10M, 3.1% at $100M (average exposure falls to 8% because most
 candidates are too thin). The cap slightly improves results at small sizes because the least liquid names were
 the worst.
 
@@ -364,154 +371,783 @@ adding to winners, and being fully engaged only in the few months that work.
 ## 4. What this backtest can and cannot say
 
 It can say: on daily bars, with his published filters and trade management applied blindly, breakouts and standard
-EPs have no edge after modest costs over 2005-2026 and none since he became widely followed (2022-2026 is the worst
-era for breakouts and for leaders generally); the best mechanical long variant has no factor alpha; the parabolic
-short has gross edge but is cost- and borrow-bound; survivorship does not explain these findings.
+EPs have no edge after modest costs over 2005-2026; the best mechanical long variant has no factor alpha; the
+parabolic short has gross edge but is cost- and borrow-bound; the picture is the same on delisting-inclusive data
+for 2019-2026.
 
 It cannot say that his actual trading has no edge. Specifically untested:
 - **Intraday execution.** His entries are opening-range highs with stops at the low of the day, typically a third
-  to a half of an ADR. Daily bars cannot order the intraday high and low; section 3.3 shows the answer for such
-  entries can be anything between -0.47R and +0.60R. The best available intraday test of a closely related
-  rule-set (a third-party study on CRSP/TAQ data of Martin Luk's rules, summarised in the third-party notes) found
-  about +0.4% per trade before spreads and about zero after.
+  to a half of an ADR. Daily bars cannot order the intraday high and low; for the opening-range proxy the answer
+  spans a range wider than any plausible edge. The best available intraday test of a closely related rule-set (a
+  third-party study on CRSP/TAQ data of Martin Luk's rules, summarised in the third-party notes) found about +0.4%
+  per trade before spreads and about zero after.
 - **Discretion.** He says he trades on intuition, passes on most setups, and reads themes, catalysts and the tape.
   The test takes every signal.
 - **Sizing dynamics.** Pyramiding into winners, 10-25% positions, 120-140% gross exposure and varying aggression
   with the regime are not modelled beyond a fixed fractional-risk rule.
 - **Borrow.** Short availability and fees are assumed, not observed.
-- **Pre-2019 dead stocks** are missing from the long-history panel (shown not to matter for 2019-2026).
 
-Statistical cautions: about 60 variants were examined across the three setups, so isolated t-stats around 2-3
-(notably the earnings-EP 50-day-trail result) should be discounted for multiple testing; trade-level t-stats
-ignore cross-sectional clustering of trades entered on the same day; R averages weight tight-stop trades more
-heavily than percentage returns do, so both are reported.
+Cautions that apply to the numbers:
+- **Era comparisons on Panel A are confounded by its uneven survivorship.** Tickers that died from about 2024 on are
+  in the data; tickers that died earlier are not. The audit measured that trades in tickers which later vanish do
+  much worse than trades in tickers that survive (breakouts without regime filter, 2019-2021: -0.38R against
+  +0.08R). So the earlier eras are flattered relative to 2022-2026, and "it got worse after 2022" is weaker than
+  the era columns suggest; the level of the result in each era is, if anything, overstated.
+- **Multiple testing.** About 60 variants were examined across the three setups; isolated t-stats around 2-3
+  (notably the earnings-EP 50-day-trail result) should be discounted.
+- **Clustering.** Variant-table t-stats treat trades as independent; month-clustered values are given for the
+  headline rows (table T6) and are lower.
+- **R versus return.** R averages weight tight-stop trades more heavily than percentage returns do; both are
+  reported, and stop distances are bounded so that R stays meaningful.
+- **Panel B residual defects.** Eight trading days are empty; some split-coincident jumps without corroboration are
+  left unadjusted (92 candidates); tickers absent from the symbol master are dropped unless SEC filings identify
+  them. The audit found that trades present in both panels agree in 96-98% of cases.
+- **Vendor glitches in Panel A** around some mid-2026 reverse splits are only partly repaired (uncorroborated
+  candidates are left alone rather than guessed at).
 
 ---
 
-### Month-clustered significance [D]
+## 5. Audit outcome
 
-Trades entered in the same calendar month share market conditions, so treating them as independent overstates
-confidence. Re-computing the t-stats with entry-month clusters (`results/clustered_t_hf.txt`, `clustered_t_dolt.txt`):
+An independent reviewer (a separate agent given the code but not the conclusions) audited the first version of
+the code and results; the full record is `/home/user/hongjie-qiu/backtest/AUDIT.md`. Its findings, and what was
+done about each, are below. **All numbers in this file are from the re-run made after these fixes.**
 
-| Setup (Panel A, 2005-2026) | Trades | Avg R | t, naive | t, month-clustered | Avg return | t of return, clustered |
-|---|---|---|---|---|---|---|
-| Breakout Q0 | 1,463 | -0.062 | -1.6 | -1.5 | -0.44% | -1.1 |
-| Breakout, close-confirmed | 911 | -0.204 | -3.9 | -3.7 | -1.15% | -2.6 |
-| EP bought at the close, standard rules | 4,538 | -0.111 | -5.2 | -3.6 | -1.19% | -4.2 |
-| Earnings EP, standard rules | 2,215 | -0.052 | -1.9 | -1.4 | -0.24% | -1.0 |
-| Earnings EP, 50-day trail | 2,198 | +0.250 | +3.2 | **+2.5** | +1.22% | +2.1 |
-| Parabolic short, next open, +30% stop | 1,570 | +0.171 | +6.5 | **+5.8** | +5.14% | +5.8 |
-| Parabolic short, first red day | 1,361 | +0.047 | +1.6 | +1.3 | +2.18% | +2.4 |
+What the audit confirmed [D, by the auditor]:
+- No look-ahead in features, cross-sectional ranks, signal conditions, entry prices, stop levels or exits:
+  truncation tests (419,300 signal and 1,343,399 trade comparisons) and perturbation tests (208,993 and 669,859)
+  showed zero differences; signals re-derived independently on 1,149 sample days matched.
+- No accounting error: an independently written plain-Python simulator reproduced all 67,967 saved trades and a
+  further 140,793 trades in other modes exactly; ten trades were checked by hand; the portfolio accounting matched a
+  hand-built example; all 21 saved result files reproduced bit for bit.
 
-Panel B (2019-07 to 2026-01), month-clustered t of average R: breakout Q0 -0.9; earnings EP with 50-day trail +2.4
-(return t +1.9); parabolic short next open +3.1; first red day -0.4. Conclusions are unchanged: nothing long is
-reliably positive except the earnings-EP/50-day-trail variant at roughly t = 2.5 before any multiple-testing
-discount, and the parabolic short at the next open stays strongly significant.
+What it found wrong, and the fix:
 
-## 5. Figures (PNG, in `/home/user/hongjie-qiu/reports/figures/`)
+| # | Finding (first version) | Measured effect | Fix in this version |
+|---|---|---|---|
+| 1 | The "close-based" entry-day rule was applied to fills at the open, where it is impossible (the day's low necessarily follows the fill), and was labelled a middle case although it is the optimistic bound | EP "buy the open": +0.08R as reported vs -0.12R exact; breakout baseline essentially unchanged; random-entry control slightly too favourable | Fills at the open are now always resolved exactly; the rule is relabelled as the optimistic bound and results are quoted as a worst-case/optimistic bracket |
+| 2 | The duplicate-ticker filter also deleted different companies that were stopped out on the same day (identical returns under a fixed-percentage stop) - all of them losers | Parabolic short at the open: +0.171R reported vs +0.148R (Panel A); +0.122R vs +0.102R (Panel B) | Duplicates now also have to share the stock's own price path into the entry; unit test added |
+| 3 | One missing bar made a moving average undefined for the next 10/20/50 rows, silently switching off trailing exits and the trend filter | Panel B earnings EP with 50-day trail: +0.423R reported vs +0.339R | Averages are taken over the valid closes in the window (at least 80% present) |
+| 4 | Panel B's calendar came from SPY rows: 14 trading days missing, 9 holiday rows present (one of which blanked 50-day averages for most stocks in Feb-Apr 2020) | Distorted gaps and averages around those dates | Calendar now taken from Panel A; holiday rows dropped; 8 days the file truly lacks stay empty |
+| 5 | Panel B split adjustment: splits rejected when the ex-date was off by a day; repair used the observed jump as the ratio (erasing that day's return); splits not applied to earlier segments of reused tickers | At most 0.5% of trades in any saved file | Ex-date searched within +/-3 sessions; splits applied before tickers are cut into segments; repair ratio taken from the recorded split or snapped to a whole ratio |
+| 6 | The scaling-glitch repair deleted a genuine squeeze (TOP Financial, April 2023) and mishandled some vendor glitches | Four real bars lost in both panels; a few false repairs | Repair now needs corroboration (recorded split of matching size, or lasting volume drop); otherwise the data is left as is |
+| 7 | Panel B classified a ticker by its current owner, dropping e.g. Facebook 2012-2022 because "FB" is an ETF today | At least 16 liquid companies missing | Earlier segments of such tickers are kept when SEC earnings filings exist for them (87 segments) |
+| 8 | Panel A's survivorship is uneven over time | Era comparisons confounded | Not fixable with this data; stated as a caution in section 4 |
+| minor | Split quarantine uses the 10 sessions after a signal as well as before; regime filter undefined after QQQ's last bar; unbounded stop distances made some R values meaningless; variant-table t-stats ignore clustering | <= 0.002R; about 4 trades; R of the first-red-day short | Quarantine kept and documented (ex-dates are public in advance); regime proxy extended with SPY; stop distances bounded; clustered t-stats added for headline rows |
 
-- `fig1_equity.png` - equity multiples 2005-2026 (log axis): breakout rule 0.60x, earnings EP with 50-day trail
-  2.67x, parabolic short 3.73x, SPY 9.05x, QQQ 21.27x.
-- `fig2_intraday_assumption.png` - average R of the same signals under pessimistic / close-based / optimistic
-  entry-day assumptions (breakout -0.11 to -0.06R; EP at the open -0.12 to +0.08R; EP opening-range proxy -0.47 to
-  +0.60R) next to the unambiguous close-entry results (-0.20R, -0.11R, -0.05R, +0.25R).
-- `fig3_short_costs.png` - parabolic short (first red day) net return per trade: +4.0% at zero cost, +2.2% at
-  50 bp + 50% borrow, +0.3% at 100 bp + 100%, -3.1% at 100 bp + 300%.
+Not verified by the audit: vendor prices against a third source; a full independent rebuild of either panel; borrow
+fees, slippage and anything needing intraday data. The re-run after the fixes was not itself re-audited; the unit
+tests (now including the two logic fixes) pass, and the direction and rough size of every change matches what the
+auditor measured.
 
-## 6. Reproduction
+---
+
+## 6. Figures (PNG, in `/home/user/hongjie-qiu/reports/figures/`)
+
+- `fig1_equity.png` - equity multiples 2005-2026 (log axis) of the three rule-based setups against SPY and QQQ.
+- `fig2_intraday_assumption.png` - average R of the same signals under the worst-case / close-based (optimistic
+  bound) / entry-day-low-ignored assumptions for the two intraday entries, next to the entries that are exact on
+  daily bars (EP at the open and the four close entries).
+- `fig3_short_costs.png` - parabolic short (first red day) net return per trade under four cost assumptions.
+
+## 7. Reproduction
 
 ```
 cd /home/user/hongjie-qiu/backtest
 python3 -I src/build_panel.py data/hf_defeatbeta data/panel_hf
-python3 -I src/build_dolt_panel.py data/hf_dolt data/hf_defeatbeta data/panel_dolt
-python3 -I src/test_sim.py
-python3 -I src/run_universe.py data/panel_hf 2005-01-03
-python3 -I src/run_breakout.py data/panel_hf results
-python3 -I src/run_ep.py data/panel_hf results --sec data/ziplime/announcements.parquet --ident data/ziplime/identifiers.parquet --current --nasdaq data/nasdaq_earnings
-python3 -I src/run_parabolic.py data/panel_hf results
-python3 -I src/run_portfolio.py data/panel_hf results hf 2005-01-03 - data/hf_defeatbeta data/french --sec data/ziplime/announcements.parquet --ident data/ziplime/identifiers.parquet --current
-# survivorship check: same scripts on data/panel_dolt with label dolt, 2019-07-01 .. 2026-01-28
-python3 -I src/make_charts.py results ../reports/figures
+python3 -I src/build_dolt_panel.py data/hf_dolt data/hf_defeatbeta data/panel_hf/dates.npy data/ziplime/announcements.parquet data/panel_dolt
+bash run_all.sh          # unit tests, every experiment on both panels, figures
+python3 -I src/make_tables.py results   # the tables in this file
 ```
 Data downloads are described in `/home/user/hongjie-qiu/backtest/data_sources.md`.
 
 ---
 
-## Appendix: full variant tables (Panel A, 2005-2026) [D]
+## Generated result tables
 
-Labels are the code's own; Q0 = breakout baseline, C0 = close-confirmed breakout, E- = episodic pivot, P- = parabolic short. 'Avg return' is net of costs, as a fraction of the position.
+Machine-generated from `backtest/results/` by `src/make_tables.py`. Panel A = main snapshot (survivors only), 2005-01-03 to 2026-11-17. Panel B = delisting-inclusive data, 2019-07-01 to 2026-01-28. 'A-window' = Panel A restricted to Panel B's dates. Long trades cost 15 bp per fill, shorts 50 bp per fill plus 50% a year borrow, unless the label says otherwise. t (naive) treats trades as independent.
 
-### Breakout variants (15 bp per fill unless the label says otherwise)
+### T1. The scan universe on its own (20-day forward return minus SPY unless the row says otherwise)
 
-| Variant | Trades | Win rate | Avg R | t | Avg return | Profit factor | Avg hold (days) | 2005-12 | 2013-18 | 2019-21 | 2022-26 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| Q0 baseline: pivot stop-entry, 1xADR stop, regime on | 1,463 | 44.0% | -0.062 | -1.6 | -0.44% | 0.88 | 5.6 | +0.03 | -0.06 | -0.03 | -0.16 |
-| Q0 day0 pessimistic (day low <= stop => out) | 1,464 | 41.7% | -0.111 | -3.0 | -0.82% | 0.79 | 5.3 | -0.02 | -0.12 | -0.09 | -0.19 |
-| Q0 day0 optimistic (day-0 low ignored) | 1,463 | 44.0% | -0.067 | -1.8 | -0.48% | 0.87 | 5.7 | +0.03 | -0.07 | -0.03 | -0.16 |
-| C0 close-confirmed entry, LOD stop, regime on | 911 | 40.0% | -0.204 | -3.9 | -1.15% | 0.67 | 4.9 | -0.34 | -0.21 | -0.14 | -0.13 |
-| Q0 no regime filter | 2,677 | 45.1% | -0.027 | -1.0 | -0.27% | 0.94 | 5.8 | +0.00 | +0.03 | +0.01 | -0.12 |
-| Q0 regime = 10>20 only (not 'both rising') | 1,841 | 44.8% | -0.030 | -0.9 | -0.23% | 0.94 | 5.8 | +0.08 | +0.00 | +0.00 | -0.17 |
-| C0 no regime filter | 1,697 | 40.4% | -0.146 | -3.8 | -0.80% | 0.76 | 5.1 | -0.26 | -0.07 | -0.08 | -0.15 |
-| Q0 top 1% leaders | 788 | 46.2% | -0.052 | -1.0 | -0.34% | 0.89 | 5.8 | +0.04 | +0.00 | -0.07 | -0.16 |
-| Q0 top 7% leaders (his TC2000 cut-off) | 3,620 | 42.3% | -0.079 | -3.2 | -0.35% | 0.85 | 5.6 | -0.07 | -0.09 | +0.02 | -0.16 |
-| Q0 momentum = point-to-point 1/3/6m return | 1,683 | 43.9% | -0.047 | -1.3 | -0.25% | 0.91 | 5.7 | -0.01 | -0.05 | +0.07 | -0.15 |
-| Q0 ADR >= 6% | 956 | 46.2% | -0.022 | -0.5 | -0.28% | 0.95 | 5.7 | +0.10 | +0.07 | +0.01 | -0.13 |
-| Q0 dollar volume >= $20M | 627 | 41.6% | -0.062 | -1.0 | -0.16% | 0.88 | 5.5 | -0.12 | -0.18 | +0.04 | -0.04 |
-| Q0 consolidation 10-40 days | 546 | 44.0% | +0.010 | +0.1 | -0.03% | 1.02 | 5.9 | +0.15 | +0.17 | +0.05 | -0.26 |
-| Q0 depth <= 3 ADR | 1,256 | 44.3% | -0.079 | -2.0 | -0.58% | 0.84 | 5.6 | +0.02 | -0.10 | -0.08 | -0.13 |
-| Q0 no tightness filter | 2,169 | 43.8% | -0.039 | -1.1 | -0.10% | 0.92 | 5.6 | -0.06 | -0.02 | +0.01 | -0.08 |
-| Q0 + volume dry-up in base | 1,019 | 42.7% | -0.094 | -2.2 | -0.70% | 0.82 | 5.5 | -0.04 | -0.01 | -0.07 | -0.23 |
-| Q0 no '1xADR extension' skip | 1,762 | 44.8% | -0.007 | -0.2 | +0.05% | 0.99 | 5.8 | +0.05 | -0.03 | +0.05 | -0.08 |
-| Q0 stop 0.5 ADR | 1,470 | 32.7% | -0.029 | -0.4 | -0.11% | 0.96 | 4.1 | +0.11 | +0.03 | -0.03 | -0.19 |
-| Q0 stop 1.5 ADR | 1,458 | 46.7% | -0.046 | -1.7 | -0.50% | 0.87 | 6.2 | +0.02 | -0.05 | -0.04 | -0.11 |
-| Q0 no partial | 1,446 | 29.3% | -0.091 | -1.9 | -0.72% | 0.85 | 6.6 | +0.02 | -0.13 | -0.05 | -0.19 |
-| Q0 partial 1/2 | 1,463 | 45.8% | -0.055 | -1.6 | -0.36% | 0.89 | 5.6 | +0.03 | -0.06 | -0.02 | -0.15 |
-| Q0 no breakeven stop | 1,446 | 33.9% | -0.072 | -1.8 | -0.52% | 0.87 | 6.6 | +0.03 | -0.09 | -0.03 | -0.17 |
-| Q0 trail SMA20 | 1,440 | 46.0% | -0.060 | -1.4 | -0.51% | 0.89 | 7.4 | +0.11 | -0.07 | -0.05 | -0.19 |
-| Q0 cost 0 bp per fill | 1,463 | 48.1% | -0.019 | -0.5 | -0.14% | 0.96 | 5.6 | +0.08 | -0.01 | +0.00 | -0.12 |
-| Q0 cost 5 bp per fill | 1,464 | 47.3% | -0.034 | -0.9 | -0.25% | 0.93 | 5.6 | +0.06 | -0.03 | -0.01 | -0.13 |
-| Q0 cost 30 bp per fill | 1,464 | 40.5% | -0.103 | -2.7 | -0.72% | 0.81 | 5.6 | -0.02 | -0.10 | -0.07 | -0.19 |
-| Q0 cost 50 bp per fill | 1,463 | 34.9% | -0.162 | -4.3 | -1.13% | 0.71 | 5.6 | -0.09 | -0.18 | -0.12 | -0.23 |
-| CONTROL random entry in trending leaders (mean of 20 seeds) | 3,677 | 39.0% | -0.051 |  | -0.49% | 0.88 |  |  |  |  |  |
+#### Panel A
 
-### Episodic-pivot variants (15 bp per fill unless the label says otherwise)
+| Group | 2005-2026 | 2005-2012 | 2013-2018 | 2019-2021 | 2022-2026 |
+|---|---|---|---|---|---|
+| liquid universe (price>=$3, $vol>=3M) | -0.07% (t=-0.5) | +0.37% (t=+1.8) | -0.13% (t=-0.7) | -0.30% (t=-0.5) | -0.58% (t=-1.7) |
+| ... with ADR >= 4% | -0.21% (t=-0.7) | +0.29% (t=+0.6) | -0.20% (t=-0.4) | -0.46% (t=-0.4) | -0.96% (t=-1.5) |
+| LEADERS: top 2% on any horizon, ADR >= 4% | -1.13% (t=-2.4) | -0.06% (t=-0.1) | -0.68% (t=-0.9) | -0.93% (t=-0.5) | -3.62% (t=-3.4) |
+| top 2% by 1-month gain, ADR >= 4% | -1.75% (t=-3.1) | -0.06% (t=-0.1) | -1.20% (t=-1.4) | -2.21% (t=-1.2) | -5.25% (t=-4.2) |
+| top 2% by 3-month gain, ADR >= 4% | -1.49% (t=-2.6) | -0.15% (t=-0.2) | -1.12% (t=-1.3) | -1.17% (t=-0.6) | -4.49% (t=-3.4) |
+| top 2% by 6-month gain, ADR >= 4% | -1.32% (t=-2.4) | -0.15% (t=-0.2) | -0.80% (t=-0.9) | -0.69% (t=-0.3) | -4.32% (t=-3.3) |
+| top 7% on any horizon, ADR >= 4% | -0.42% (t=-1.1) | +0.24% (t=+0.5) | -0.30% (t=-0.5) | -0.54% (t=-0.4) | -1.69% (t=-2.2) |
+| academic 12-2 momentum, top decile | +0.16% (t=+0.5) | +0.29% (t=+0.7) | +0.10% (t=+0.2) | +0.37% (t=+0.3) | -0.14% (t=-0.2) |
+| academic 12-2 momentum, bottom decile | -0.33% (t=-0.8) | +0.53% (t=+0.8) | -0.60% (t=-1.2) | -0.24% (t=-0.2) | -1.53% (t=-1.9) |
+| leaders 5-day forward | -0.30% (t=-2.0) | -0.03% (t=-0.2) | -0.20% (t=-1.1) | -0.43% (t=-1.0) | -0.78% (t=-1.6) |
+| leaders 60-day forward | -1.45% (t=-1.0) | +0.63% (t=+0.4) | -0.76% (t=-0.3) | -0.41% (t=-0.1) | -7.03% (t=-2.2) |
 
-| Variant | Trades | Win rate | Avg R | t | Avg return | Profit factor | Avg hold (days) | 2005-12 | 2013-18 | 2019-21 | 2022-26 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| E-close: vol>=3x, strong close; buy close, LOD stop | 4,538 | 41.1% | -0.111 | -5.2 | -1.19% | 0.80 | 5.8 | -0.10 | -0.15 | -0.20 | -0.06 |
-| E-close, trail SMA20 | 4,531 | 40.8% | -0.093 | -3.9 | -1.15% | 0.83 | 7.6 | -0.10 | -0.13 | -0.16 | -0.05 |
-| E-close, trail SMA50, no partial/BE | 4,482 | 23.7% | +0.155 | +2.3 | +0.22% | 1.19 | 18.7 | +0.26 | -0.05 | +0.13 | +0.21 |
-| E-close, earnings only | 2,215 | 45.6% | -0.052 | -1.9 | -0.24% | 0.89 | 6.4 | -0.08 | -0.10 | -0.12 | -0.00 |
-| E-close, earnings only, trail SMA20 | 2,214 | 45.3% | -0.015 | -0.5 | -0.03% | 0.97 | 8.5 | -0.04 | -0.07 | -0.08 | +0.04 |
-| E-close, earnings only, trail SMA50 no partial/BE | 2,198 | 25.3% | +0.250 | +3.2 | +1.22% | 1.33 | 21.3 | +0.39 | +0.14 | +0.19 | +0.27 |
-| E-close, non-earnings only | 2,333 | 36.9% | -0.165 | -5.1 | -2.07% | 0.73 | 5.3 | -0.14 | -0.20 | -0.24 | -0.12 |
-| E-close, neglected (6m ret -30..+30%) | 2,330 | 42.1% | -0.088 | -3.0 | -0.54% | 0.84 | 6.2 | -0.06 | -0.13 | -0.23 | -0.03 |
-| E-close, earnings + neglected, trail SMA20 | 1,312 | 45.2% | -0.014 | -0.3 | +0.00% | 0.97 | 8.8 | -0.15 | -0.01 | -0.13 | +0.06 |
-| E-close, gap >= 20% | 1,129 | 41.7% | -0.053 | -1.2 | -1.43% | 0.91 | 5.9 | -0.02 | -0.10 | -0.23 | +0.01 |
-| E-close, volume >= 5x | 2,950 | 40.3% | -0.133 | -5.1 | -1.49% | 0.77 | 5.7 | -0.09 | -0.17 | -0.20 | -0.10 |
-| E-close, cost 0 | 4,538 | 47.0% | -0.058 | -2.7 | -0.89% | 0.89 | 5.8 | -0.04 | -0.09 | -0.15 | -0.01 |
-| E-close, cost 30 bp | 4,538 | 36.6% | -0.165 | -7.8 | -1.49% | 0.72 | 5.8 | -0.16 | -0.21 | -0.24 | -0.12 |
-| E-open: buy the open, 1xADR stop, day0 close-based | 17,936 | 36.3% | +0.077 | +4.1 | -0.41% | 1.12 | 4.4 | -0.05 | +0.09 | +0.05 | +0.13 |
-| E-open, day0 pessimistic | 18,089 | 30.1% | -0.116 | -8.1 | -1.37% | 0.83 | 3.5 | -0.20 | -0.18 | -0.08 | -0.09 |
-| E-open, 1.5xADR stop, day0 pessimistic | 17,842 | 37.5% | -0.089 | -8.2 | -1.53% | 0.84 | 4.7 | -0.15 | -0.12 | -0.07 | -0.07 |
-| E-open, earnings only, day0 pessimistic | 6,637 | 31.3% | -0.043 | -1.8 | -0.26% | 0.94 | 3.9 | -0.03 | -0.08 | +0.01 | -0.05 |
-| E-orb proxy: buy open+0.25ADR, stop open-0.25ADR, pess. | 13,566 | 12.0% | -0.469 | -21.6 | -1.97% | 0.53 | 1.3 | -0.51 | -0.58 | -0.38 | -0.47 |
-| E-orb proxy, day0 close-based | 13,278 | 31.7% | +0.605 | +13.7 | +1.20% | 1.74 | 3.7 | +0.35 | +0.60 | +0.52 | +0.74 |
-| E-orb proxy, day0 optimistic | 13,204 | 32.3% | +0.003 | +0.1 | -0.69% | 1.00 | 4.1 | -0.09 | -0.09 | -0.03 | +0.08 |
+breakout stop-entries (regime on) n=1520: entry->same-day close mean +0.50% median +0.13% up 51% | entry->+1d minus SPY +0.12% (med -0.39%) | entry->+5d minus SPY -0.44% (med -1.19%) | entry->+20d minus SPY -1.33% (med -2.96%) | day-0 low: median -4.2% below entry; <= entry-1ADR on 9% of days, <= entry-0.5ADR on 62%
 
-### Parabolic-short variants (50 bp per fill and 50% a year borrow unless the label says otherwise)
+close-confirmed breakouts (regime on) n=937: close->+1d minus SPY -0.19% (med -0.52%) | close->+5d minus SPY -0.72% (med -1.30%) | close->+20d minus SPY -2.25% (med -2.84%) |
 
-| Variant | Trades | Win rate | Avg R | t | Avg return | Profit factor | Avg hold (days) | 2005-12 | 2013-18 | 2019-21 | 2022-26 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| P-red: first red close after 5d>=100%, stop=run high | 1,361 | 67.7% | +0.047 | +1.6 | +2.18% | 1.15 | 4.3 | +0.20 | +0.06 | +0.10 | +0.01 |
-| P-red, target SMA20, hold<=20d | 1,363 | 63.6% | +0.036 | +1.1 | +3.49% | 1.09 | 8.1 | -0.08 | +0.06 | +0.10 | +0.01 |
-| P-red, no target, 5-day time exit | 1,364 | 59.5% | +0.049 | +1.7 | +2.21% | 1.16 | 4.4 | +0.11 | +0.04 | +0.13 | +0.01 |
-| P-red, run >= 60% | 3,044 | 62.0% | -0.043 | -2.2 | +0.63% | 0.89 | 4.1 | +0.05 | +0.01 | +0.01 | -0.10 |
-| P-red, run >= 200% | 437 | 69.6% | +0.075 | +1.9 | +3.87% | 1.29 | 4.7 | +0.14 | +0.12 | +0.10 | +0.06 |
-| P-red, day $vol >= 50M | 979 | 68.6% | +0.024 | +0.8 | +2.66% | 1.08 | 4.5 | +0.14 | +0.17 | +0.09 | -0.04 |
-| P-red, cost 0, borrow 0 | 1,362 | 70.6% | +0.140 | +5.4 | +4.03% | 1.54 | 4.4 | +0.31 | +0.13 | +0.16 | +0.12 |
-| P-red, cost 100bp/fill, borrow 100%/yr | 1,361 | 65.2% | -0.047 | -1.3 | +0.34% | 0.87 | 4.3 | +0.10 | -0.00 | +0.04 | -0.11 |
-| P-red, cost 100bp/fill, borrow 300%/yr | 1,361 | 58.0% | -0.197 | -4.4 | -3.11% | 0.57 | 4.3 | -0.11 | -0.13 | -0.07 | -0.28 |
-| P-open: short next open, stop +30%, pessimistic | 1,570 | 60.7% | +0.171 | +6.5 | +5.14% | 1.44 | 4.0 | +0.32 | +0.28 | +0.23 | +0.11 |
-| P-open, stop +50% | 1,498 | 67.6% | +0.079 | +4.1 | +3.93% | 1.28 | 4.7 | +0.22 | +0.15 | +0.09 | +0.05 |
-| P-open, stop +100% | 1,416 | 73.9% | +0.044 | +3.8 | +4.43% | 1.31 | 5.5 | +0.13 | +0.08 | +0.06 | +0.02 |
+breakout stop-entries (no regime filter) n=2776: entry->same-day close mean +0.40% median +0.12% up 51% | entry->+1d minus SPY +0.53% (med -0.34%) | entry->+5d minus SPY -0.24% (med -0.89%) | entry->+20d minus SPY -1.56% (med -2.91%) | day-0 low: median -4.1% below entry; <= entry-1ADR on 9% of days, <= entry-0.5ADR on 63%
+
+close-confirmed breakouts (no regime filter) n=1745: close->+1d minus SPY +0.15% (med -0.35%) | close->+5d minus SPY -0.09% (med -0.96%) | close->+20d minus SPY -2.45% (med -3.15%) |
+
+avg number of leaders per day: 63 | base universe: 1967
+
+#### Panel B
+
+| Group | 2019-2026 | 2019-2021 | 2022-2026 |
+|---|---|---|---|
+| liquid universe (price>=$3, $vol>=3M) | -0.43% (t=-1.2) | -0.29% (t=-0.4) | -0.54% (t=-1.5) |
+| ... with ADR >= 4% | -0.71% (t=-1.1) | -0.57% (t=-0.4) | -0.83% (t=-1.1) |
+| LEADERS: top 2% on any horizon, ADR >= 4% | -2.55% (t=-2.4) | -1.06% (t=-0.5) | -3.43% (t=-3.0) |
+| top 2% by 1-month gain, ADR >= 4% | -4.15% (t=-3.5) | -2.35% (t=-1.1) | -5.16% (t=-3.7) |
+| top 2% by 3-month gain, ADR >= 4% | -3.44% (t=-2.9) | -1.24% (t=-0.5) | -4.33% (t=-3.0) |
+| top 2% by 6-month gain, ADR >= 4% | -2.81% (t=-2.2) | -0.45% (t=-0.2) | -3.83% (t=-2.6) |
+| top 7% on any horizon, ADR >= 4% | -1.18% (t=-1.4) | -0.65% (t=-0.4) | -1.45% (t=-1.7) |
+| academic 12-2 momentum, top decile | +0.37% (t=+0.5) | +0.33% (t=+0.2) | +0.44% (t=+0.7) |
+| academic 12-2 momentum, bottom decile | -0.79% (t=-0.9) | +0.02% (t=+0.0) | -1.28% (t=-1.4) |
+| leaders 5-day forward | -0.93% (t=-3.5) | -0.51% (t=-1.0) | -1.15% (t=-3.6) |
+| leaders 60-day forward | -4.55% (t=-1.3) | -0.00% (t=-0.0) | -7.46% (t=-2.6) |
+
+breakout stop-entries (regime on) n=746: entry->same-day close mean +0.39% median +0.07% up 50% | entry->+1d minus SPY -0.16% (med -0.80%) | entry->+5d minus SPY -0.88% (med -2.39%) | entry->+20d minus SPY -2.12% (med -5.48%) | day-0 low: median -5.7% below entry; <= entry-1ADR on 8% of days, <= entry-0.5ADR on 64%
+
+close-confirmed breakouts (regime on) n=441: close->+1d minus SPY -0.13% (med -0.72%) | close->+5d minus SPY -0.83% (med -2.45%) | close->+20d minus SPY -2.37% (med -5.80%) |
+
+breakout stop-entries (no regime filter) n=1191: entry->same-day close mean +0.37% median +0.02% up 50% | entry->+1d minus SPY +0.87% (med -0.90%) | entry->+5d minus SPY -0.62% (med -1.87%) | entry->+20d minus SPY -2.48% (med -5.54%) | day-0 low: median -5.3% below entry; <= entry-1ADR on 8% of days, <= entry-0.5ADR on 63%
+
+close-confirmed breakouts (no regime filter) n=724: close->+1d minus SPY +0.40% (med -0.69%) | close->+5d minus SPY -0.16% (med -1.87%) | close->+20d minus SPY -2.18% (med -5.50%) |
+
+avg number of leaders per day: 98 | base universe: 2908
+
+### T2. Breakouts
+
+#### Breakout variants, Panel A
+
+| Variant | Trades | Win rate | Avg R | t (naive) | Avg return | Profit factor | Avg hold (days) | Avg stop distance | 2005-12 | 2013-18 | 2019-21 | 2022-26 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Q0 baseline: pivot stop-entry, 1xADR stop, regime on (entry day: close-based = optimistic bound) | 1,478 | 43.8% | -0.070 | -1.9 | -0.51% | 0.86 | 5.6 | 8.6% | +0.02 | -0.07 | -0.04 | -0.17 |
+| Q0 day0 worst case (entry-day low <= stop => out) | 1,479 | 41.5% | -0.118 | -3.2 | -0.88% | 0.78 | 5.3 | 8.6% | -0.03 | -0.13 | -0.09 | -0.20 |
+| Q0 day0 ignored (entry-day low ignored) | 1,478 | 43.8% | -0.074 | -2.0 | -0.55% | 0.86 | 5.6 | 8.6% | +0.02 | -0.07 | -0.04 | -0.18 |
+| C0 close-confirmed entry, LOD stop, regime on | 918 | 39.7% | -0.210 | -4.0 | -1.19% | 0.66 | 4.9 | 7.0% | -0.34 | -0.22 | -0.14 | -0.15 |
+| Q0 no regime filter | 2,694 | 45.0% | -0.024 | -0.9 | -0.19% | 0.95 | 5.8 | 8.3% | -0.01 | +0.03 | +0.01 | -0.10 |
+| Q0 regime = 10>20 only (not 'both rising') | 1,865 | 44.7% | -0.034 | -1.0 | -0.27% | 0.93 | 5.7 | 8.5% | +0.08 | +0.01 | -0.00 | -0.18 |
+| C0 no regime filter | 1,708 | 40.5% | -0.140 | -3.6 | -0.76% | 0.76 | 5.1 | 6.7% | -0.27 | -0.06 | -0.08 | -0.14 |
+| Q0 top 1% leaders | 796 | 45.9% | -0.061 | -1.3 | -0.45% | 0.88 | 5.7 | 9.8% | +0.03 | -0.01 | -0.07 | -0.18 |
+| Q0 top 7% leaders (his TC2000 cut-off) | 3,666 | 42.3% | -0.082 | -3.4 | -0.38% | 0.84 | 5.5 | 7.1% | -0.07 | -0.09 | +0.03 | -0.17 |
+| Q0 momentum = point-to-point 1/3/6m return | 1,702 | 43.9% | -0.052 | -1.5 | -0.29% | 0.90 | 5.7 | 8.2% | -0.02 | -0.05 | +0.07 | -0.16 |
+| Q0 ADR >= 6% | 969 | 45.8% | -0.032 | -0.7 | -0.38% | 0.93 | 5.6 | 10.5% | +0.10 | +0.06 | +0.00 | -0.14 |
+| Q0 dollar volume >= $20M | 634 | 41.2% | -0.074 | -1.2 | -0.26% | 0.86 | 5.5 | 8.7% | -0.13 | -0.18 | +0.04 | -0.06 |
+| Q0 consolidation 10-40 days | 548 | 43.8% | +0.006 | +0.1 | -0.08% | 1.01 | 5.8 | 9.2% | +0.15 | +0.17 | +0.05 | -0.28 |
+| Q0 depth <= 3 ADR | 1,271 | 44.0% | -0.087 | -2.2 | -0.66% | 0.83 | 5.6 | 8.8% | +0.01 | -0.11 | -0.08 | -0.14 |
+| Q0 no tightness filter | 2,196 | 43.6% | -0.047 | -1.4 | -0.17% | 0.91 | 5.6 | 8.5% | -0.06 | -0.03 | +0.01 | -0.10 |
+| Q0 + volume dry-up in base | 1,033 | 42.5% | -0.101 | -2.4 | -0.76% | 0.80 | 5.5 | 8.3% | -0.04 | -0.02 | -0.07 | -0.24 |
+| Q0 no '1xADR extension' skip | 1,780 | 44.3% | -0.025 | -0.7 | -0.09% | 0.95 | 5.7 | 8.6% | +0.05 | -0.05 | +0.02 | -0.10 |
+| Q0 stop 0.5 ADR | 1,485 | 32.3% | -0.045 | -0.7 | -0.16% | 0.94 | 4.0 | 4.3% | +0.09 | +0.02 | -0.03 | -0.21 |
+| Q0 stop 1.5 ADR | 1,472 | 46.6% | -0.051 | -1.9 | -0.55% | 0.86 | 6.2 | 12.8% | +0.02 | -0.05 | -0.04 | -0.11 |
+| Q0 no partial | 1,461 | 29.2% | -0.098 | -2.1 | -0.77% | 0.84 | 6.6 | 8.6% | +0.02 | -0.13 | -0.05 | -0.20 |
+| Q0 partial 1/2 | 1,478 | 45.5% | -0.063 | -1.8 | -0.43% | 0.88 | 5.6 | 8.6% | +0.03 | -0.06 | -0.03 | -0.16 |
+| Q0 no breakeven stop | 1,461 | 33.7% | -0.079 | -2.0 | -0.57% | 0.86 | 6.6 | 8.6% | +0.03 | -0.10 | -0.03 | -0.18 |
+| Q0 trail SMA20 | 1,455 | 45.6% | -0.069 | -1.6 | -0.59% | 0.87 | 7.3 | 8.6% | +0.11 | -0.09 | -0.05 | -0.20 |
+| Q0 cost 0 bp per fill | 1,478 | 47.8% | -0.027 | -0.7 | -0.21% | 0.94 | 5.6 | 8.6% | +0.08 | -0.02 | +0.00 | -0.14 |
+| Q0 cost 5 bp per fill | 1,479 | 47.1% | -0.042 | -1.1 | -0.32% | 0.92 | 5.6 | 8.6% | +0.06 | -0.03 | -0.01 | -0.15 |
+| Q0 cost 30 bp per fill | 1,479 | 40.2% | -0.110 | -2.9 | -0.80% | 0.79 | 5.6 | 8.6% | -0.03 | -0.11 | -0.07 | -0.20 |
+| Q0 cost 50 bp per fill | 1,478 | 34.6% | -0.169 | -4.5 | -1.20% | 0.70 | 5.6 | 8.6% | -0.10 | -0.18 | -0.12 | -0.25 |
+| CONTROL random entry in trending leaders (mean of 20 seeds) | 3,723 | 38.3% | -0.070 |  | -0.67% | 0.84 |  |  |  |  |  |  |
+
+Control - random entry at the open in trending leaders, regime on, same exits (20 seeds; fills at the open are exact):
+
+n per run ~3723 | avgR mean -0.070 (min -0.132, max +0.010) | win 38.3% | avgRet -0.67%
+
+Q0 profit concentration: sum R = -102.8 | top 10 trades = 86.7 | top 1% (14 trades) = 109.6 | all others = -212.5
+
+exit reasons (0 stop, 1 trail, 2 time, 3 data end, 4 day-0 stop): {0: 939, 1: 506, 4: 33}
+
+regime-on share of days: strict 0.47, loose 0.63
+
+#### Q0 baseline by year, Panel A
+
+| Year | Trades | Win rate | Avg R | Sum R | Avg return |
+|---|---|---|---|---|---|
+| 2005 | 21 | 57% | +0.12 | +2.6 | +0.66% |
+| 2006 | 35 | 40% | +0.03 | +1.2 | +0.63% |
+| 2007 | 55 | 45% | -0.06 | -3.2 | -0.55% |
+| 2008 | 33 | 45% | -0.12 | -3.9 | -0.65% |
+| 2009 | 57 | 53% | -0.03 | -1.8 | +0.60% |
+| 2010 | 57 | 51% | +0.40 | +22.8 | +2.39% |
+| 2011 | 27 | 30% | -0.39 | -10.5 | -2.25% |
+| 2012 | 54 | 43% | +0.02 | +1.0 | -1.05% |
+| 2013 | 71 | 55% | +0.24 | +17.2 | +1.43% |
+| 2014 | 53 | 42% | -0.20 | -10.6 | -0.73% |
+| 2015 | 37 | 32% | -0.24 | -8.7 | -0.44% |
+| 2016 | 72 | 54% | +0.14 | +10.1 | +0.91% |
+| 2017 | 69 | 35% | -0.33 | -22.9 | -1.97% |
+| 2018 | 62 | 42% | -0.15 | -9.4 | -0.51% |
+| 2019 | 103 | 50% | -0.08 | -8.3 | -0.76% |
+| 2020 | 127 | 50% | +0.13 | +17.0 | +1.57% |
+| 2021 | 106 | 34% | -0.20 | -20.8 | -1.60% |
+| 2022 | 61 | 31% | -0.38 | -23.5 | -3.37% |
+| 2023 | 105 | 40% | -0.18 | -18.9 | -1.59% |
+| 2024 | 133 | 41% | -0.20 | -26.4 | -2.57% |
+| 2025 | 96 | 51% | +0.12 | +11.2 | +1.72% |
+| 2026 | 44 | 30% | -0.39 | -17.1 | -3.02% |
+
+#### Q0 without the regime filter by year, Panel A
+
+| Year | Trades | Win rate | Avg R | Sum R | Avg return |
+|---|---|---|---|---|---|
+| 2005 | 63 | 38% | -0.28 | -17.7 | -1.94% |
+| 2006 | 80 | 40% | -0.12 | -9.3 | -0.53% |
+| 2007 | 89 | 43% | -0.09 | -8.4 | -0.70% |
+| 2008 | 81 | 49% | -0.13 | -10.8 | -0.95% |
+| 2009 | 109 | 60% | +0.14 | +15.6 | +1.20% |
+| 2010 | 89 | 53% | +0.41 | +36.6 | +2.35% |
+| 2011 | 64 | 39% | -0.14 | -8.7 | -0.73% |
+| 2012 | 87 | 44% | -0.03 | -2.8 | -1.17% |
+| 2013 | 116 | 56% | +0.20 | +23.6 | +1.14% |
+| 2014 | 85 | 46% | -0.15 | -12.7 | -0.59% |
+| 2015 | 120 | 42% | -0.14 | -16.9 | -0.53% |
+| 2016 | 121 | 58% | +0.30 | +36.6 | +1.68% |
+| 2017 | 106 | 42% | -0.09 | -9.9 | -0.41% |
+| 2018 | 139 | 42% | +0.02 | +2.6 | +0.80% |
+| 2019 | 150 | 52% | +0.04 | +5.4 | +0.19% |
+| 2020 | 164 | 49% | +0.14 | +23.3 | +1.22% |
+| 2021 | 161 | 39% | -0.15 | -24.1 | -1.23% |
+| 2022 | 180 | 38% | -0.25 | -45.6 | -2.18% |
+| 2023 | 163 | 40% | -0.07 | -11.2 | +0.25% |
+| 2024 | 195 | 42% | -0.12 | -23.7 | -1.61% |
+| 2025 | 165 | 48% | +0.05 | +7.9 | +0.59% |
+| 2026 | 167 | 37% | -0.08 | -13.6 | -0.89% |
+
+#### Breakout variants, Panel B
+
+| Variant | Trades | Win rate | Avg R | t (naive) | Avg return | Profit factor | Avg hold (days) | Avg stop distance |
+|---|---|---|---|---|---|---|---|---|
+| Q0 baseline: pivot stop-entry, 1xADR stop, regime on (entry day: close-based = optimistic bound) | 735 | 43.0% | -0.054 | -0.9 | -0.31% | 0.90 | 5.5 | 10.8% |
+| Q0 day0 worst case (entry-day low <= stop => out) | 735 | 41.0% | -0.093 | -1.6 | -0.63% | 0.83 | 5.2 | 10.8% |
+| Q0 day0 ignored (entry-day low ignored) | 735 | 43.0% | -0.060 | -1.0 | -0.38% | 0.89 | 5.5 | 10.8% |
+| C0 close-confirmed entry, LOD stop, regime on | 436 | 40.8% | -0.121 | -1.5 | -0.82% | 0.80 | 5.0 | 8.7% |
+| Q0 no regime filter | 1,174 | 43.1% | -0.046 | -1.0 | -0.26% | 0.91 | 5.5 | 10.5% |
+| Q0 regime = 10>20 only (not 'both rising') | 872 | 42.9% | -0.073 | -1.4 | -0.46% | 0.86 | 5.4 | 10.7% |
+| C0 no regime filter | 714 | 41.0% | -0.123 | -2.0 | -0.64% | 0.80 | 5.0 | 8.3% |
+| Q0 top 1% leaders | 392 | 43.4% | -0.098 | -1.3 | -0.62% | 0.81 | 5.5 | 12.7% |
+| Q0 top 7% leaders (his TC2000 cut-off) | 2,140 | 42.7% | -0.064 | -2.0 | -0.24% | 0.88 | 5.6 | 8.0% |
+| Q0 momentum = point-to-point 1/3/6m return | 869 | 43.3% | -0.033 | -0.6 | -0.12% | 0.94 | 5.7 | 10.0% |
+| Q0 ADR >= 6% | 631 | 43.6% | -0.031 | -0.5 | -0.20% | 0.94 | 5.5 | 11.7% |
+| Q0 dollar volume >= $20M | 338 | 45.9% | +0.035 | +0.4 | +0.77% | 1.07 | 5.7 | 10.9% |
+| Q0 consolidation 10-40 days | 287 | 39.4% | -0.090 | -0.9 | -0.79% | 0.84 | 5.3 | 11.5% |
+| Q0 depth <= 3 ADR | 650 | 42.8% | -0.075 | -1.2 | -0.61% | 0.86 | 5.5 | 11.1% |
+| Q0 no tightness filter | 1,128 | 44.1% | -0.005 | -0.1 | +0.27% | 0.99 | 5.5 | 10.4% |
+| Q0 + volume dry-up in base | 516 | 40.5% | -0.131 | -2.0 | -1.14% | 0.76 | 5.2 | 10.6% |
+| Q0 no '1xADR extension' skip | 881 | 43.8% | -0.012 | -0.2 | +0.09% | 0.98 | 5.6 | 10.9% |
+| Q0 stop 0.5 ADR | 740 | 31.5% | -0.018 | -0.2 | +0.04% | 0.98 | 3.9 | 5.4% |
+| Q0 stop 1.5 ADR | 730 | 45.6% | -0.051 | -1.2 | -0.54% | 0.86 | 6.0 | 16.0% |
+| Q0 no partial | 730 | 28.2% | -0.058 | -0.7 | -0.31% | 0.91 | 6.3 | 10.8% |
+| Q0 partial 1/2 | 735 | 43.5% | -0.057 | -1.1 | -0.33% | 0.89 | 5.5 | 10.8% |
+| Q0 no breakeven stop | 730 | 32.2% | -0.059 | -1.0 | -0.33% | 0.90 | 6.3 | 10.8% |
+| Q0 trail SMA20 | 716 | 45.1% | -0.058 | -0.9 | -0.42% | 0.89 | 7.4 | 10.8% |
+| Q0 cost 0 bp per fill | 735 | 44.6% | -0.020 | -0.3 | -0.01% | 0.96 | 5.5 | 10.8% |
+| Q0 cost 5 bp per fill | 735 | 44.2% | -0.031 | -0.5 | -0.11% | 0.94 | 5.5 | 10.8% |
+| Q0 cost 30 bp per fill | 735 | 40.1% | -0.088 | -1.5 | -0.61% | 0.84 | 5.5 | 10.8% |
+| Q0 cost 50 bp per fill | 735 | 35.2% | -0.133 | -2.2 | -1.01% | 0.77 | 5.5 | 10.8% |
+| CONTROL random entry in trending leaders (mean of 20 seeds) | 1,202 | 38.7% | -0.046 |  | -0.60% | 0.89 |  |  |
+
+n per run ~1202 | avgR mean -0.046 (min -0.100, max +0.063) | win 38.7% | avgRet -0.60%
+
+Q0 profit concentration: sum R = -39.7 | top 10 trades = 88.9 | top 1% (7 trades) = 70.9 | all others = -110.5
+
+#### Breakout variants, A-window
+
+| Variant | Trades | Win rate | Avg R | t (naive) | Avg return | Profit factor | Avg hold (days) | Avg stop distance |
+|---|---|---|---|---|---|---|---|---|
+| Q0 baseline: pivot stop-entry, 1xADR stop, regime on (entry day: close-based = optimistic bound) | 677 | 42.2% | -0.092 | -1.6 | -0.81% | 0.83 | 5.3 | 10.7% |
+| Q0 day0 worst case (entry-day low <= stop => out) | 677 | 40.2% | -0.131 | -2.3 | -1.15% | 0.76 | 5.1 | 10.7% |
+| Q0 day0 ignored (entry-day low ignored) | 677 | 42.2% | -0.098 | -1.7 | -0.89% | 0.82 | 5.3 | 10.7% |
+| C0 close-confirmed entry, LOD stop, regime on | 399 | 41.1% | -0.115 | -1.3 | -0.90% | 0.81 | 4.9 | 8.7% |
+| Q0 no regime filter | 1,118 | 43.2% | -0.048 | -1.0 | -0.39% | 0.90 | 5.5 | 10.3% |
+| Q0 regime = 10>20 only (not 'both rising') | 823 | 42.0% | -0.088 | -1.7 | -0.76% | 0.83 | 5.4 | 10.6% |
+| C0 no regime filter | 676 | 39.9% | -0.134 | -2.1 | -0.77% | 0.78 | 4.9 | 8.3% |
+| Q0 top 1% leaders | 356 | 43.5% | -0.121 | -1.7 | -1.05% | 0.76 | 5.4 | 12.7% |
+| Q0 top 7% leaders (his TC2000 cut-off) | 1,978 | 41.5% | -0.073 | -2.1 | -0.32% | 0.86 | 5.5 | 7.9% |
+| Q0 momentum = point-to-point 1/3/6m return | 836 | 42.8% | -0.045 | -0.8 | -0.34% | 0.91 | 5.6 | 9.8% |
+| Q0 ADR >= 6% | 589 | 43.0% | -0.071 | -1.1 | -0.76% | 0.86 | 5.3 | 11.5% |
+| Q0 dollar volume >= $20M | 315 | 43.5% | +0.001 | +0.0 | +0.46% | 1.00 | 5.5 | 11.0% |
+| Q0 consolidation 10-40 days | 269 | 37.2% | -0.123 | -1.3 | -1.24% | 0.79 | 5.2 | 11.4% |
+| Q0 depth <= 3 ADR | 598 | 42.3% | -0.102 | -1.7 | -1.00% | 0.80 | 5.3 | 11.0% |
+| Q0 no tightness filter | 1,026 | 43.2% | -0.023 | -0.4 | +0.04% | 0.96 | 5.4 | 10.4% |
+| Q0 + volume dry-up in base | 466 | 40.6% | -0.157 | -2.6 | -1.54% | 0.71 | 5.1 | 10.4% |
+| Q0 no '1xADR extension' skip | 811 | 43.3% | -0.023 | -0.4 | -0.17% | 0.96 | 5.4 | 10.8% |
+| Q0 stop 0.5 ADR | 681 | 30.4% | -0.095 | -0.9 | -0.43% | 0.88 | 3.7 | 5.4% |
+| Q0 stop 1.5 ADR | 671 | 45.3% | -0.063 | -1.5 | -0.76% | 0.83 | 5.9 | 15.9% |
+| Q0 no partial | 670 | 27.6% | -0.107 | -1.4 | -0.97% | 0.83 | 6.2 | 10.7% |
+| Q0 partial 1/2 | 677 | 43.4% | -0.088 | -1.7 | -0.79% | 0.83 | 5.3 | 10.7% |
+| Q0 no breakeven stop | 670 | 31.5% | -0.097 | -1.6 | -0.88% | 0.83 | 6.2 | 10.7% |
+| Q0 trail SMA20 | 661 | 44.3% | -0.115 | -1.8 | -1.07% | 0.79 | 7.1 | 10.7% |
+| Q0 cost 0 bp per fill | 677 | 44.3% | -0.058 | -1.0 | -0.52% | 0.89 | 5.3 | 10.7% |
+| Q0 cost 5 bp per fill | 678 | 44.0% | -0.070 | -1.2 | -0.64% | 0.86 | 5.3 | 10.7% |
+| Q0 cost 30 bp per fill | 677 | 39.1% | -0.125 | -2.1 | -1.11% | 0.77 | 5.3 | 10.7% |
+| Q0 cost 50 bp per fill | 677 | 34.4% | -0.170 | -2.9 | -1.51% | 0.70 | 5.3 | 10.7% |
+| CONTROL random entry in trending leaders (mean of 20 seeds) | 867 | 39.3% | -0.005 |  | -0.36% | 0.99 |  |  |
+
+n per run ~867 | avgR mean -0.005 (min -0.090, max +0.224) | win 39.3% | avgRet -0.36%
+
+### T3. Episodic pivots
+
+#### Event study, Panel A: return after the gap-day close, minus SPY
+
+| Subset | Events | Gap-day open->close | +1 day | +5 days | +20 days | +60 days |
+|---|---|---|---|---|---|---|
+| all gaps >= 10% | 19,402 | -0.89% | -0.18% (median -0.42%, t ~ -2.9) | -1.48% (median -1.51%, t ~ -5.4) | -3.06% (median -3.08%, t ~ -5.9) | -2.52% (median -6.24%, t ~ -1.7) |
+| volume >= 3x and day $vol >= 10M | 11,531 | +0.65% | -0.28% (median -0.41%, t ~ -3.0) | -1.82% (median -1.37%, t ~ -6.5) | -3.80% (median -2.82%, t ~ -5.6) | -4.41% (median -6.46%, t ~ -2.0) |
+| ... and close >= open, top half of range | 4,658 | +10.52% | +0.01% (median -0.30%, t ~ -0.1) | -1.40% (median -1.01%, t ~ -4.7) | -2.22% (median -1.56%, t ~ -3.1) | -2.35% (median -4.48%, t ~ -0.6) |
+| ... and close < open (faded) | 5,660 | -8.34% | -0.50% (median -0.57%, t ~ -2.7) | -2.06% (median -1.71%, t ~ -4.9) | -4.62% (median -3.89%, t ~ -4.9) | -5.60% (median -7.85%, t ~ -1.9) |
+| earnings reaction day | 4,737 | +1.28% | +0.11% (median +0.05%, t ~ +0.6) | -0.19% (median -0.37%, t ~ -0.2) | +0.38% (median -0.06%, t ~ +0.6) | +0.68% (median -1.15%, t ~ +0.6) |
+| not an earnings day | 6,794 | +0.21% | -0.55% (median -0.89%, t ~ -3.6) | -2.95% (median -2.69%, t ~ -7.7) | -6.68% (median -6.32%, t ~ -6.7) | -8.00% (median -12.37%, t ~ -2.2) |
+| earnings + close>=open, top half of range | 2,217 | +7.36% | +0.07% (median +0.05%, t ~ -0.7) | -0.26% (median -0.39%, t ~ -1.3) | +0.48% (median -0.11%, t ~ +0.2) | +0.71% (median -1.14%, t ~ +0.4) |
+| earnings + EPS surprise >= +20% | 2,178 | +1.67% | +0.12% (median +0.04%, t ~ +0.4) | -0.12% (median -0.33%, t ~ -0.1) | +0.61% (median +0.33%, t ~ +0.6) | +0.49% (median -0.99%, t ~ +0.2) |
+| earnings + EPS surprise <= 0 | 394 | +0.80% | -0.02% (median -0.32%, t ~ -0.2) | -0.21% (median -0.57%, t ~ -0.3) | +1.01% (median -0.67%, t ~ +0.5) | -0.55% (median -3.53%, t ~ +0.0) |
+| gap 10-20% | 8,070 | +1.34% | -0.01% (median -0.24%, t ~ -1.0) | -1.00% (median -0.93%, t ~ -4.3) | -2.03% (median -1.94%, t ~ -3.8) | -1.98% (median -4.52%, t ~ -1.1) |
+| gap 20-40% | 2,615 | -0.17% | -0.42% (median -0.71%, t ~ -2.1) | -2.79% (median -2.39%, t ~ -7.2) | -5.50% (median -4.55%, t ~ -4.1) | -8.05% (median -10.58%, t ~ -2.3) |
+| gap 40-inf% | 846 | -3.44% | -2.44% (median -2.72%, t ~ -1.9) | -6.65% (median -7.23%, t ~ -4.1) | -15.36% (median -14.24%, t ~ -5.4) | -17.18% (median -25.19%, t ~ -1.3) |
+| 'neglected': prior 6m return in [-30%, +30%] | 5,470 | +0.71% | +0.00% (median -0.19%, t ~ -0.2) | -0.46% (median -0.47%, t ~ -2.2) | -1.29% (median -1.24%, t ~ -2.7) | -1.94% (median -3.12%, t ~ -1.0) |
+| extended: prior 6m return > +50% | 2,640 | +0.14% | -0.67% (median -0.88%, t ~ -2.2) | -3.48% (median -3.97%, t ~ -5.7) | -6.81% (median -7.79%, t ~ -4.3) | -8.11% (median -15.97%, t ~ -1.3) |
+| beaten down: prior 6m return < -30% | 2,068 | +1.21% | -0.37% (median -1.24%, t ~ -1.0) | -3.42% (median -3.28%, t ~ -5.8) | -6.69% (median -6.03%, t ~ -4.3) | -5.18% (median -8.34%, t ~ -1.8) |
+| volume >= 10x | 2,881 | +2.81% | -1.38% (median -1.16%, t ~ -3.7) | -4.33% (median -3.52%, t ~ -7.9) | -8.08% (median -6.56%, t ~ -5.4) | -12.46% (median -14.21%, t ~ -3.4) |
+| 2005-2012 | 1,501 | +0.73% | +0.04% (median -0.12%, t ~ +0.4) | +0.09% (median -0.02%, t ~ +0.5) | +0.49% (median +0.37%, t ~ +0.4) | +1.25% (median +0.15%, t ~ +0.6) |
+| earnings only 2005-2012 | 770 | +1.11% | +0.50% (median +0.22%, t ~ +3.2) | +0.53% (median +0.41%, t ~ +2.1) | +1.28% (median +0.81%, t ~ +1.3) | +2.58% (median +2.21%, t ~ +1.0) |
+| 2013-2018 | 2,003 | +0.10% | -0.35% (median -0.18%, t ~ -2.1) | -1.09% (median -0.56%, t ~ -2.7) | -2.16% (median -1.12%, t ~ -2.7) | -2.98% (median -2.41%, t ~ -1.4) |
+| earnings only 2013-2018 | 962 | +0.84% | +0.18% (median +0.16%, t ~ +0.7) | +0.25% (median -0.09%, t ~ +0.6) | +1.00% (median +0.50%, t ~ +0.9) | +2.28% (median +1.04%, t ~ +0.9) |
+| 2019-2021 | 2,751 | -0.02% | -0.41% (median -0.96%, t ~ -2.2) | -2.36% (median -3.05%, t ~ -3.6) | -4.14% (median -5.90%, t ~ -2.3) | -2.15% (median -10.79%, t ~ -0.5) |
+| earnings only 2019-2021 | 738 | +1.62% | -0.07% (median +0.02%, t ~ -0.5) | -0.26% (median -1.14%, t ~ +0.5) | -0.59% (median -1.07%, t ~ +0.1) | -0.27% (median -3.51%, t ~ +0.2) |
+| 2022-2026 | 5,276 | +1.18% | -0.27% (median -0.49%, t ~ -1.6) | -2.35% (median -1.64%, t ~ -5.6) | -5.50% (median -4.09%, t ~ -5.7) | -7.98% (median -9.28%, t ~ -2.3) |
+| earnings only 2022-2026 | 2,267 | +1.41% | -0.00% (median -0.19%, t ~ -0.7) | -0.61% (median -0.77%, t ~ -2.6) | +0.11% (median -0.61%, t ~ -0.7) | -0.40% (median -3.20%, t ~ -0.5) |
+
+#### EP trade variants, Panel A
+
+| Variant | Trades | Win rate | Avg R | t (naive) | Avg return | Profit factor | Avg hold (days) | Avg stop distance | 2005-12 | 2013-18 | 2019-21 | 2022-26 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| E-close: vol>=3x, strong close; buy close, LOD stop | 4,538 | 41.1% | -0.111 | -5.2 | -1.19% | 0.80 | 5.8 | 8.2% | -0.10 | -0.15 | -0.20 | -0.06 |
+| E-close, trail SMA20 | 4,531 | 40.8% | -0.093 | -3.9 | -1.15% | 0.83 | 7.6 | 8.2% | -0.10 | -0.13 | -0.16 | -0.05 |
+| E-close, trail SMA50, no partial/BE | 4,482 | 23.6% | +0.153 | +2.3 | +0.19% | 1.19 | 18.7 | 8.2% | +0.26 | -0.05 | +0.13 | +0.21 |
+| E-close, earnings only | 2,215 | 45.6% | -0.052 | -1.9 | -0.24% | 0.89 | 6.4 | 6.2% | -0.08 | -0.10 | -0.12 | -0.00 |
+| E-close, earnings only, trail SMA20 | 2,214 | 45.3% | -0.015 | -0.5 | -0.03% | 0.97 | 8.5 | 6.2% | -0.04 | -0.07 | -0.08 | +0.04 |
+| E-close, earnings only, trail SMA50 no partial/BE | 2,198 | 25.3% | +0.248 | +3.1 | +1.21% | 1.33 | 21.3 | 6.2% | +0.39 | +0.14 | +0.19 | +0.26 |
+| E-close, non-earnings only | 2,333 | 36.9% | -0.165 | -5.1 | -2.07% | 0.73 | 5.3 | 10.1% | -0.14 | -0.20 | -0.24 | -0.12 |
+| E-close, neglected (6m ret -30..+30%) | 2,330 | 42.1% | -0.088 | -3.0 | -0.54% | 0.84 | 6.2 | 6.2% | -0.06 | -0.13 | -0.23 | -0.03 |
+| E-close, earnings + neglected, trail SMA20 | 1,312 | 45.2% | -0.014 | -0.3 | +0.00% | 0.97 | 8.8 | 5.4% | -0.15 | -0.01 | -0.13 | +0.06 |
+| E-close, gap >= 20% | 1,129 | 41.7% | -0.053 | -1.2 | -1.43% | 0.91 | 5.9 | 10.8% | -0.02 | -0.10 | -0.23 | +0.01 |
+| E-close, volume >= 5x | 2,950 | 40.3% | -0.133 | -5.1 | -1.49% | 0.77 | 5.7 | 8.7% | -0.09 | -0.17 | -0.20 | -0.10 |
+| E-close, cost 0 | 4,538 | 47.0% | -0.058 | -2.7 | -0.89% | 0.89 | 5.8 | 8.2% | -0.04 | -0.09 | -0.15 | -0.01 |
+| E-close, cost 30 bp | 4,538 | 36.6% | -0.165 | -7.8 | -1.49% | 0.72 | 5.8 | 8.2% | -0.16 | -0.21 | -0.24 | -0.12 |
+| E-open: buy the open, 1xADR stop (exact) | 18,099 | 30.0% | -0.117 | -8.2 | -1.38% | 0.83 | 3.5 | 8.6% | -0.20 | -0.18 | -0.08 | -0.09 |
+| E-open, 1.5xADR stop (exact) | 17,862 | 37.5% | -0.091 | -8.4 | -1.53% | 0.83 | 4.7 | 12.4% | -0.15 | -0.12 | -0.07 | -0.07 |
+| E-open, earnings only (exact) | 6,637 | 31.3% | -0.043 | -1.8 | -0.26% | 0.94 | 3.9 | 4.9% | -0.03 | -0.08 | +0.01 | -0.05 |
+| E-orb proxy: buy open+0.25ADR, stop open-0.25ADR, worst case | 13,573 | 12.0% | -0.470 | -21.7 | -1.98% | 0.52 | 1.3 | 4.0% | -0.51 | -0.58 | -0.38 | -0.47 |
+| E-orb proxy, close-based (optimistic bound) | 13,283 | 31.6% | +0.604 | +13.7 | +1.19% | 1.74 | 3.7 | 3.9% | +0.35 | +0.60 | +0.52 | +0.74 |
+| E-orb proxy, entry-day low ignored | 13,208 | 32.3% | +0.003 | +0.1 | -0.69% | 1.00 | 4.1 | 3.9% | -0.09 | -0.09 | -0.03 | +0.08 |
+
+E-close profit concentration: sum R = -504.8 | top 10 = 107.1 | top 1% (45) = 327.1 | others = -831.9
+
+#### EP bought at the close, standard rules, by year, Panel A
+
+| Year | Trades | Win rate | Avg R | Sum R | Avg return |
+|---|---|---|---|---|---|
+| 2005 | 61 | 46% | -0.12 | -7.0 | -0.90% |
+| 2006 | 76 | 46% | +0.20 | +15.3 | +0.58% |
+| 2007 | 77 | 40% | -0.05 | -3.8 | -0.56% |
+| 2008 | 99 | 37% | -0.40 | -39.2 | -3.21% |
+| 2009 | 101 | 40% | -0.11 | -10.8 | -2.03% |
+| 2010 | 53 | 40% | -0.17 | -9.1 | -1.11% |
+| 2011 | 92 | 41% | -0.16 | -14.7 | -1.19% |
+| 2012 | 85 | 49% | +0.04 | +3.4 | +0.27% |
+| 2013 | 89 | 34% | -0.32 | -28.3 | -1.88% |
+| 2014 | 112 | 42% | -0.24 | -26.5 | -1.43% |
+| 2015 | 133 | 41% | -0.17 | -22.4 | -0.86% |
+| 2016 | 117 | 47% | -0.02 | -1.8 | -0.20% |
+| 2017 | 158 | 46% | +0.01 | +2.0 | -0.25% |
+| 2018 | 185 | 38% | -0.21 | -39.3 | -1.41% |
+| 2019 | 199 | 41% | -0.12 | -24.7 | -0.17% |
+| 2020 | 408 | 36% | -0.24 | -96.8 | -2.41% |
+| 2021 | 326 | 35% | -0.19 | -62.6 | -2.63% |
+| 2022 | 295 | 48% | -0.12 | -34.1 | -1.36% |
+| 2023 | 303 | 51% | +0.13 | +37.9 | -0.30% |
+| 2024 | 477 | 44% | +0.07 | +32.9 | +0.31% |
+| 2025 | 607 | 39% | -0.13 | -78.7 | -1.66% |
+| 2026 | 485 | 37% | -0.20 | -96.3 | -1.39% |
+
+#### Earnings EP, 20-day trail, by year, Panel A
+
+| Year | Trades | Win rate | Avg R | Sum R | Avg return |
+|---|---|---|---|---|---|
+| 2005 | 38 | 58% | +0.48 | +18.1 | +2.51% |
+| 2006 | 43 | 40% | -0.18 | -7.8 | -0.44% |
+| 2007 | 52 | 44% | -0.00 | -0.1 | -0.39% |
+| 2008 | 50 | 40% | -0.31 | -15.3 | -1.85% |
+| 2009 | 47 | 47% | -0.12 | -5.6 | -0.59% |
+| 2010 | 26 | 46% | -0.03 | -0.8 | +0.03% |
+| 2011 | 53 | 49% | -0.15 | -8.1 | -0.95% |
+| 2012 | 52 | 56% | +0.10 | +5.1 | +0.84% |
+| 2013 | 42 | 36% | -0.17 | -7.2 | -1.11% |
+| 2014 | 52 | 42% | -0.17 | -8.9 | -0.87% |
+| 2015 | 72 | 40% | -0.33 | -23.8 | -1.89% |
+| 2016 | 66 | 53% | +0.12 | +7.8 | +0.90% |
+| 2017 | 90 | 50% | +0.09 | +7.9 | +1.15% |
+| 2018 | 116 | 40% | -0.07 | -7.6 | -0.52% |
+| 2019 | 127 | 40% | -0.16 | -20.4 | -0.35% |
+| 2020 | 102 | 37% | -0.04 | -3.7 | -0.77% |
+| 2021 | 105 | 49% | -0.03 | -3.1 | -0.17% |
+| 2022 | 140 | 46% | -0.14 | -19.4 | -1.14% |
+| 2023 | 169 | 55% | +0.30 | +51.2 | +1.05% |
+| 2024 | 256 | 48% | +0.10 | +26.7 | +0.70% |
+| 2025 | 278 | 45% | +0.08 | +22.0 | +0.83% |
+| 2026 | 238 | 40% | -0.17 | -40.8 | -0.69% |
+
+#### Event study, Panel B
+
+| Subset | Events | Gap-day open->close | +1 day | +5 days | +20 days | +60 days |
+|---|---|---|---|---|---|---|
+| all gaps >= 10% | 12,646 | -0.91% | -0.24% (median -0.47%, t ~ -3.8) | -1.39% (median -1.79%, t ~ -3.3) | -2.81% (median -3.70%, t ~ -5.2) | -2.13% (median -7.32%, t ~ -2.3) |
+| volume >= 3x and day $vol >= 10M | 7,594 | +0.42% | -0.43% (median -0.53%, t ~ -3.1) | -1.86% (median -1.69%, t ~ -4.7) | -3.67% (median -3.67%, t ~ -4.6) | -3.93% (median -8.29%, t ~ -1.4) |
+| ... and close >= open, top half of range | 3,005 | +10.79% | -0.09% (median -0.40%, t ~ +0.1) | -1.49% (median -1.23%, t ~ -3.7) | -1.88% (median -2.28%, t ~ -2.3) | -1.28% (median -5.89%, t ~ -0.3) |
+| ... and close < open (faded) | 3,766 | -8.90% | -0.78% (median -0.72%, t ~ -3.2) | -2.34% (median -2.25%, t ~ -3.6) | -4.73% (median -5.12%, t ~ -3.7) | -5.37% (median -10.34%, t ~ -1.3) |
+| earnings reaction day | 2,640 | +1.46% | +0.01% (median -0.13%, t ~ -0.3) | -0.24% (median -0.66%, t ~ +0.6) | +0.06% (median -0.74%, t ~ +0.1) | -0.08% (median -3.29%, t ~ -0.1) |
+| not an earnings day | 4,954 | -0.14% | -0.67% (median -0.82%, t ~ -3.2) | -2.73% (median -2.69%, t ~ -5.7) | -5.72% (median -6.03%, t ~ -5.1) | -6.09% (median -12.69%, t ~ -1.2) |
+| earnings + close>=open, top half of range | 1,227 | +8.19% | +0.04% (median +0.01%, t ~ -0.8) | -0.44% (median -0.82%, t ~ -0.8) | +0.06% (median -0.86%, t ~ -0.4) | -0.35% (median -3.55%, t ~ -0.5) |
+| gap 10-20% | 4,939 | +1.34% | +0.09% (median -0.37%, t ~ -0.0) | -0.94% (median -1.42%, t ~ -2.6) | -2.03% (median -3.19%, t ~ -3.0) | -1.21% (median -6.41%, t ~ -0.7) |
+| gap 20-40% | 1,932 | -0.14% | -0.88% (median -0.70%, t ~ -2.7) | -3.04% (median -2.06%, t ~ -5.9) | -4.79% (median -3.97%, t ~ -2.9) | -6.87% (median -10.05%, t ~ -1.4) |
+| gap 40-inf% | 723 | -4.35% | -2.86% (median -1.35%, t ~ -3.3) | -4.97% (median -3.57%, t ~ -2.5) | -11.96% (median -7.64%, t ~ -4.1) | -16.30% (median -23.81%, t ~ -0.9) |
+| 'neglected': prior 6m return in [-30%, +30%] | 3,250 | +0.62% | -0.00% (median -0.31%, t ~ +0.0) | -0.48% (median -0.89%, t ~ -0.8) | -0.97% (median -1.79%, t ~ -1.4) | -1.56% (median -4.44%, t ~ -0.4) |
+| extended: prior 6m return > +50% | 1,784 | -0.07% | -0.44% (median -0.66%, t ~ -0.3) | -2.77% (median -3.86%, t ~ -1.7) | -5.47% (median -7.45%, t ~ -2.3) | -4.51% (median -16.72%, t ~ -0.3) |
+| beaten down: prior 6m return < -30% | 1,443 | +0.84% | -0.52% (median -1.09%, t ~ -3.0) | -3.12% (median -2.90%, t ~ -4.4) | -5.80% (median -5.51%, t ~ -3.5) | -3.21% (median -7.81%, t ~ -1.6) |
+| volume >= 10x | 2,275 | +1.75% | -1.36% (median -0.88%, t ~ -3.1) | -3.44% (median -2.59%, t ~ -5.9) | -6.23% (median -5.13%, t ~ -3.7) | -11.81% (median -14.31%, t ~ -2.6) |
+| 2019-2021 | 3,178 | -0.14% | -0.57% (median -0.75%, t ~ -2.4) | -2.36% (median -2.68%, t ~ -3.1) | -3.76% (median -4.96%, t ~ -2.3) | -1.64% (median -9.58%, t ~ -0.5) |
+| earnings only 2019-2021 | 782 | +1.45% | +0.08% (median +0.03%, t ~ +0.4) | -0.16% (median -1.04%, t ~ +1.3) | -0.66% (median -1.81%, t ~ +0.4) | +0.73% (median -3.51%, t ~ +0.4) |
+| 2022-2026 | 4,416 | +0.82% | -0.33% (median -0.44%, t ~ -1.9) | -1.49% (median -1.13%, t ~ -3.5) | -3.60% (median -2.96%, t ~ -4.1) | -5.69% (median -7.31%, t ~ -1.4) |
+| earnings only 2022-2026 | 1,858 | +1.47% | -0.03% (median -0.20%, t ~ -0.8) | -0.27% (median -0.45%, t ~ -0.6) | +0.37% (median -0.29%, t ~ -0.3) | -0.44% (median -3.20%, t ~ -0.6) |
+
+#### EP trade variants, Panel B
+
+| Variant | Trades | Win rate | Avg R | t (naive) | Avg return | Profit factor | Avg hold (days) | Avg stop distance |
+|---|---|---|---|---|---|---|---|---|
+| E-close: vol>=3x, strong close; buy close, LOD stop | 2,937 | 40.3% | -0.075 | -2.5 | -1.03% | 0.87 | 5.9 | 8.7% |
+| E-close, trail SMA20 | 2,933 | 40.3% | -0.033 | -0.9 | -0.90% | 0.94 | 7.8 | 8.7% |
+| E-close, trail SMA50, no partial/BE | 2,898 | 24.8% | +0.258 | +2.8 | +0.71% | 1.33 | 18.9 | 8.7% |
+| E-close, earnings only | 1,226 | 46.7% | +0.029 | +0.7 | +0.19% | 1.06 | 6.5 | 6.6% |
+| E-close, earnings only, trail SMA20 | 1,226 | 46.5% | +0.083 | +1.6 | +0.46% | 1.17 | 8.7 | 6.6% |
+| E-close, earnings only, trail SMA50 no partial/BE | 1,215 | 26.4% | +0.330 | +3.0 | +1.57% | 1.45 | 21.4 | 6.6% |
+| E-close, non-earnings only | 1,714 | 35.9% | -0.148 | -3.7 | -1.89% | 0.76 | 5.5 | 10.1% |
+| E-close, neglected (6m ret -30..+30%) | 1,392 | 42.2% | -0.030 | -0.7 | +0.03% | 0.95 | 6.5 | 6.4% |
+| E-close, earnings + neglected, trail SMA20 | 689 | 48.6% | +0.151 | +2.1 | +1.07% | 1.32 | 9.4 | 5.7% |
+| E-close, gap >= 20% | 879 | 38.7% | -0.052 | -0.9 | -1.57% | 0.91 | 6.1 | 10.2% |
+| E-close, volume >= 5x | 1,941 | 38.7% | -0.106 | -2.9 | -1.41% | 0.81 | 5.8 | 9.2% |
+| E-close, cost 0 | 2,937 | 46.5% | -0.017 | -0.6 | -0.73% | 0.97 | 5.9 | 8.7% |
+| E-close, cost 30 bp | 2,937 | 36.1% | -0.132 | -4.4 | -1.32% | 0.78 | 5.9 | 8.7% |
+| E-open: buy the open, 1xADR stop (exact) | 11,808 | 30.4% | -0.058 | -3.0 | -1.09% | 0.91 | 3.7 | 9.1% |
+| E-open, 1.5xADR stop (exact) | 11,625 | 37.4% | -0.046 | -3.2 | -1.23% | 0.91 | 4.9 | 13.2% |
+| E-open, earnings only (exact) | 3,857 | 30.4% | -0.006 | -0.2 | -0.10% | 0.99 | 3.8 | 5.1% |
+| E-orb proxy: buy open+0.25ADR, stop open-0.25ADR, worst case | 8,905 | 12.2% | -0.422 | -15.0 | -1.96% | 0.57 | 1.4 | 4.3% |
+| E-orb proxy, close-based (optimistic bound) | 8,680 | 30.4% | +0.632 | +13.6 | +1.42% | 1.76 | 3.8 | 4.2% |
+| E-orb proxy, entry-day low ignored | 8,627 | 31.1% | +0.031 | +0.6 | -0.65% | 1.02 | 4.2 | 4.2% |
+
+#### Event study, A-window
+
+| Subset | Events | Gap-day open->close | +1 day | +5 days | +20 days | +60 days |
+|---|---|---|---|---|---|---|
+| all gaps >= 10% | 11,386 | -0.79% | -0.24% (median -0.56%, t ~ -3.7) | -1.58% (median -2.07%, t ~ -3.4) | -3.24% (median -4.42%, t ~ -4.5) | -1.91% (median -8.39%, t ~ -1.1) |
+| volume >= 3x and day $vol >= 10M | 6,688 | +0.70% | -0.39% (median -0.64%, t ~ -2.7) | -2.16% (median -2.05%, t ~ -5.5) | -4.43% (median -4.59%, t ~ -4.7) | -4.85% (median -9.58%, t ~ -1.6) |
+| ... and close >= open, top half of range | 2,644 | +12.09% | -0.15% (median -0.50%, t ~ -0.4) | -1.97% (median -1.42%, t ~ -4.6) | -2.72% (median -2.69%, t ~ -2.6) | -2.36% (median -7.04%, t ~ -0.3) |
+| ... and close < open (faded) | 3,324 | -9.36% | -0.70% (median -0.84%, t ~ -2.4) | -2.44% (median -2.64%, t ~ -3.6) | -5.42% (median -6.26%, t ~ -3.9) | -6.32% (median -11.66%, t ~ -1.4) |
+| earnings reaction day | 2,393 | +1.59% | -0.02% (median -0.14%, t ~ -0.4) | -0.41% (median -0.76%, t ~ -0.5) | -0.12% (median -0.59%, t ~ -0.5) | -0.33% (median -3.73%, t ~ -0.2) |
+| not an earnings day | 4,295 | +0.20% | -0.60% (median -1.10%, t ~ -2.8) | -3.13% (median -3.71%, t ~ -6.3) | -6.83% (median -8.16%, t ~ -5.2) | -7.39% (median -14.96%, t ~ -1.4) |
+| earnings + close>=open, top half of range | 1,122 | +8.35% | -0.04% (median +0.01%, t ~ -1.5) | -0.75% (median -0.93%, t ~ -2.7) | -0.15% (median -0.77%, t ~ -0.8) | -1.09% (median -4.04%, t ~ -0.6) |
+| gap 10-20% | 4,425 | +1.57% | +0.14% (median -0.41%, t ~ +0.2) | -1.06% (median -1.55%, t ~ -3.1) | -2.42% (median -3.61%, t ~ -3.1) | -1.92% (median -7.34%, t ~ -0.9) |
+| gap 20-40% | 1,675 | +0.05% | -0.94% (median -0.88%, t ~ -3.1) | -3.50% (median -2.84%, t ~ -7.2) | -5.56% (median -5.28%, t ~ -3.0) | -8.36% (median -11.99%, t ~ -1.8) |
+| gap 40-inf% | 588 | -3.99% | -2.85% (median -3.10%, t ~ -1.6) | -6.59% (median -8.23%, t ~ -2.9) | -16.30% (median -16.61%, t ~ -4.7) | -17.24% (median -28.58%, t ~ -1.0) |
+| 'neglected': prior 6m return in [-30%, +30%] | 2,865 | +0.99% | -0.00% (median -0.35%, t ~ -0.5) | -0.76% (median -1.04%, t ~ -2.9) | -1.81% (median -2.15%, t ~ -2.8) | -2.56% (median -5.42%, t ~ -1.0) |
+| extended: prior 6m return > +50% | 1,750 | +0.09% | -0.29% (median -0.96%, t ~ -0.6) | -3.20% (median -4.94%, t ~ -3.1) | -6.62% (median -10.53%, t ~ -2.8) | -7.18% (median -18.91%, t ~ -0.7) |
+| beaten down: prior 6m return < -30% | 1,302 | +0.92% | -0.95% (median -1.53%, t ~ -2.4) | -3.49% (median -3.61%, t ~ -4.7) | -6.65% (median -6.55%, t ~ -3.6) | -4.85% (median -10.07%, t ~ -1.6) |
+| volume >= 10x | 1,812 | +2.83% | -1.41% (median -1.43%, t ~ -2.0) | -4.67% (median -4.78%, t ~ -6.0) | -8.44% (median -8.86%, t ~ -3.8) | -14.21% (median -19.73%, t ~ -2.8) |
+| 2019-2021 | 2,533 | -0.02% | -0.44% (median -1.03%, t ~ -2.0) | -2.52% (median -3.38%, t ~ -3.5) | -4.25% (median -6.38%, t ~ -2.0) | -1.79% (median -11.23%, t ~ -0.4) |
+| earnings only 2019-2021 | 616 | +1.67% | -0.09% (median +0.02%, t ~ -0.3) | -0.37% (median -1.35%, t ~ +0.5) | -0.69% (median -1.18%, t ~ +0.2) | +0.16% (median -3.78%, t ~ +0.3) |
+| 2022-2026 | 4,155 | +1.14% | -0.36% (median -0.51%, t ~ -1.9) | -1.94% (median -1.35%, t ~ -4.3) | -4.54% (median -3.69%, t ~ -4.5) | -6.74% (median -8.66%, t ~ -1.8) |
+| earnings only 2022-2026 | 1,777 | +1.56% | +0.00% (median -0.19%, t ~ -0.3) | -0.43% (median -0.54%, t ~ -1.5) | +0.08% (median -0.49%, t ~ -0.8) | -0.50% (median -3.68%, t ~ -0.6) |
+
+#### EP trade variants, A-window
+
+| Variant | Trades | Win rate | Avg R | t (naive) | Avg return | Profit factor | Avg hold (days) | Avg stop distance |
+|---|---|---|---|---|---|---|---|---|
+| E-close: vol>=3x, strong close; buy close, LOD stop | 2,551 | 41.5% | -0.088 | -2.9 | -1.28% | 0.85 | 5.8 | 9.1% |
+| E-close, trail SMA20 | 2,548 | 41.4% | -0.060 | -1.7 | -1.18% | 0.89 | 7.5 | 9.1% |
+| E-close, trail SMA50, no partial/BE | 2,513 | 23.8% | +0.256 | +2.4 | +1.04% | 1.32 | 18.4 | 9.1% |
+| E-close, earnings only | 1,121 | 46.7% | +0.006 | +0.1 | -0.02% | 1.01 | 6.5 | 6.7% |
+| E-close, earnings only, trail SMA20 | 1,121 | 46.4% | +0.051 | +1.1 | +0.23% | 1.10 | 8.7 | 6.7% |
+| E-close, earnings only, trail SMA50 no partial/BE | 1,111 | 25.9% | +0.317 | +2.7 | +1.59% | 1.42 | 21.3 | 6.7% |
+| E-close, non-earnings only | 1,437 | 37.5% | -0.157 | -3.8 | -2.23% | 0.75 | 5.2 | 11.0% |
+| E-close, neglected (6m ret -30..+30%) | 1,235 | 43.4% | -0.044 | -1.0 | -0.23% | 0.92 | 6.2 | 6.8% |
+| E-close, earnings + neglected, trail SMA20 | 644 | 48.3% | +0.104 | +1.6 | +0.62% | 1.22 | 9.2 | 5.7% |
+| E-close, gap >= 20% | 720 | 41.5% | -0.085 | -1.5 | -2.24% | 0.85 | 5.7 | 11.4% |
+| E-close, volume >= 5x | 1,630 | 40.3% | -0.116 | -3.1 | -1.79% | 0.80 | 5.6 | 9.9% |
+| E-close, cost 0 | 2,551 | 46.3% | -0.039 | -1.3 | -0.98% | 0.93 | 5.8 | 9.1% |
+| E-close, cost 30 bp | 2,551 | 37.2% | -0.136 | -4.6 | -1.57% | 0.77 | 5.8 | 9.1% |
+| E-open: buy the open, 1xADR stop (exact) | 10,431 | 30.1% | -0.060 | -2.9 | -1.17% | 0.91 | 3.6 | 9.3% |
+| E-open, 1.5xADR stop (exact) | 10,263 | 37.4% | -0.053 | -3.4 | -1.34% | 0.90 | 4.7 | 13.5% |
+| E-open, earnings only (exact) | 3,539 | 30.6% | +0.000 | +0.0 | -0.07% | 1.00 | 3.8 | 5.1% |
+| E-orb proxy: buy open+0.25ADR, stop open-0.25ADR, worst case | 7,961 | 12.1% | -0.427 | -14.0 | -1.96% | 0.57 | 1.4 | 4.4% |
+| E-orb proxy, close-based (optimistic bound) | 7,756 | 30.8% | +0.697 | +10.5 | +1.52% | 1.84 | 3.8 | 4.3% |
+| E-orb proxy, entry-day low ignored | 7,700 | 31.6% | +0.095 | +1.3 | -0.52% | 1.06 | 4.2 | 4.3% |
+
+### T4. Parabolic shorts
+
+#### Event study, Panel A: profit of a short opened at the next open, no stop, no costs
+
+| Definition | Events | +1 day | +3 days | +5 days | +10 days | +20 days |
+|---|---|---|---|---|---|---|
+| 5d run >= 100%, 3 up days, >=30% over SMA10 | 1,391 | mean +3.3%, median +8.9%, 67% win, worst -999% | mean +4.8%, median +12.5%, 68% win, worst -1702% | mean +6.8%, median +15.8%, 71% win, worst -1701% | mean +10.8%, median +20.8%, 72% win, worst -1618% | mean +12.8%, median +25.6%, 73% win, worst -1415% |
+| 5d run >= 60% | 3,093 | mean +2.3%, median +4.7%, 62% win, worst -999% | mean +0.1%, median +7.7%, 63% win, worst -10039% | mean +4.4%, median +9.4%, 65% win, worst -1701% | mean +6.4%, median +12.2%, 66% win, worst -1618% | mean +8.0%, median +16.7%, 67% win, worst -2005% |
+| 5d run >= 200% | 449 | mean +8.7%, median +15.1%, 68% win, worst -354% | mean +8.8%, median +18.2%, 72% win, worst -573% | mean +11.5%, median +23.3%, 74% win, worst -675% | mean +21.1%, median +31.6%, 77% win, worst -391% | mean +23.7%, median +39.0%, 78% win, worst -344% |
+| 5d run >= 100%, day $vol >= 50M | 1,003 | mean +4.2%, median +9.2%, 67% win, worst -999% | mean +5.1%, median +12.3%, 68% win, worst -1702% | mean +7.4%, median +16.3%, 71% win, worst -1701% | mean +12.4%, median +22.3%, 73% win, worst -1618% | mean +15.1%, median +28.0%, 74% win, worst -1415% |
+| 10d run >= 200% | 639 | mean +7.8%, median +11.8%, 69% win, worst -292% | mean +11.3%, median +17.9%, 73% win, worst -267% | mean +14.9%, median +23.0%, 75% win, worst -269% | mean +22.2%, median +31.5%, 77% win, worst -300% | mean +25.5%, median +38.2%, 80% win, worst -344% |
+| 5d run >= 50%, day $vol >= 200M (large/liquid) | 1,311 | mean +2.6%, median +4.4%, 62% win, worst -354% | mean -3.9%, median +6.8%, 64% win, worst -10039% | mean +4.6%, median +8.7%, 65% win, worst -581% | mean +8.1%, median +12.8%, 67% win, worst -802% | mean +10.1%, median +17.8%, 69% win, worst -928% |
+
+5d run >= 100% 2005-2012: n=100 5d mean +11.9% med +13.0% win 69%
+
+5d run >= 100% 2013-2018: n=227 5d mean +13.1% med +18.4% win 72%
+
+5d run >= 100% 2019-2021: n=533 5d mean +9.2% med +17.5% win 77%
+
+5d run >= 100% 2022-2026: n=1138 5d mean +7.3% med +15.1% win 68%
+
+#### Parabolic-short variants, Panel A
+
+| Variant | Trades | Win rate | Avg R | t (naive) | Avg return | Profit factor | Avg hold (days) | Avg stop distance | 2005-12 | 2013-18 | 2019-21 | 2022-26 | Worst trade |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| P-red: first red close after 5d>=100%, stop=run high | 1,366 | 67.5% | +0.072 | +2.8 | +1.97% | 1.25 | 4.3 | 46.5% | +0.19 | +0.07 | +0.09 | +0.05 | -422% |
+| P-red, target SMA20, hold<=20d | 1,368 | 63.2% | +0.062 | +2.1 | +3.19% | 1.16 | 8.1 | 46.5% | -0.09 | +0.07 | +0.10 | +0.06 | -422% |
+| P-red, no target, 5-day time exit | 1,369 | 59.5% | +0.074 | +2.8 | +2.10% | 1.26 | 4.4 | 46.4% | +0.10 | +0.05 | +0.12 | +0.06 | -172% |
+| P-red, run >= 60% | 3,054 | 62.0% | -0.008 | -0.4 | +0.56% | 0.98 | 4.1 | 35.1% | +0.05 | +0.02 | +0.01 | -0.03 | -422% |
+| P-red, run >= 200% | 439 | 69.0% | +0.069 | +1.8 | +2.67% | 1.26 | 4.6 | 58.1% | +0.09 | +0.13 | +0.08 | +0.05 | -119% |
+| P-red, day $vol >= 50M | 981 | 68.5% | +0.064 | +2.5 | +2.27% | 1.24 | 4.5 | 50.5% | +0.12 | +0.17 | +0.08 | +0.03 | -422% |
+| P-red, cost 0, borrow 0 | 1,367 | 70.4% | +0.141 | +5.5 | +3.82% | 1.54 | 4.3 | 46.5% | +0.29 | +0.13 | +0.15 | +0.12 | -417% |
+| P-red, cost 100bp/fill, borrow 100%/yr | 1,366 | 65.0% | +0.003 | +0.1 | +0.13% | 1.01 | 4.3 | 46.5% | +0.09 | +0.00 | +0.03 | -0.02 | -428% |
+| P-red, cost 100bp/fill, borrow 300%/yr | 1,366 | 57.8% | -0.122 | -4.6 | -3.32% | 0.68 | 4.3 | 46.5% | -0.11 | -0.12 | -0.08 | -0.15 | -435% |
+| P-open: short next open, stop +30%, pessimistic | 1,609 | 59.5% | +0.147 | +5.7 | +4.42% | 1.37 | 3.9 | 30.0% | +0.32 | +0.25 | +0.20 | +0.09 | -112% |
+| P-open, stop +50% | 1,518 | 66.9% | +0.069 | +3.6 | +3.45% | 1.24 | 4.6 | 50.0% | +0.22 | +0.13 | +0.08 | +0.04 | -161% |
+| P-open, stop +100% | 1,424 | 73.8% | +0.042 | +3.6 | +4.24% | 1.29 | 5.5 | 100.0% | +0.13 | +0.07 | +0.05 | +0.02 | -303% |
+
+#### First-red-day short by year, Panel A
+
+| Year | Trades | Win rate | Avg R | Sum R | Avg return |
+|---|---|---|---|---|---|
+| 2005 | 4 | 75% | +0.32 | +1.3 | +1.66% |
+| 2006 | 5 | 60% | +0.68 | +3.4 | +5.37% |
+| 2007 | 4 | 50% | -0.03 | -0.1 | -0.84% |
+| 2008 | 13 | 69% | +0.04 | +0.5 | +6.09% |
+| 2009 | 27 | 63% | +0.24 | +6.4 | -5.38% |
+| 2010 | 7 | 43% | -0.07 | -0.5 | -2.29% |
+| 2011 | 10 | 50% | -0.16 | -1.6 | -3.51% |
+| 2012 | 7 | 100% | +0.78 | +5.4 | +15.98% |
+| 2013 | 17 | 76% | +0.23 | +3.9 | +6.15% |
+| 2014 | 20 | 70% | -0.04 | -0.8 | +0.94% |
+| 2015 | 13 | 54% | -0.21 | -2.8 | -2.89% |
+| 2016 | 22 | 73% | +0.32 | +7.1 | +7.66% |
+| 2017 | 40 | 72% | +0.07 | +2.9 | +2.46% |
+| 2018 | 38 | 66% | -0.01 | -0.3 | -0.14% |
+| 2019 | 27 | 48% | -0.12 | -3.2 | -1.24% |
+| 2020 | 184 | 75% | +0.16 | +28.5 | +4.88% |
+| 2021 | 154 | 71% | +0.05 | +7.9 | +0.76% |
+| 2022 | 80 | 75% | +0.15 | +12.2 | +4.45% |
+| 2023 | 94 | 68% | +0.07 | +6.9 | +2.80% |
+| 2024 | 209 | 62% | -0.00 | -0.7 | +0.52% |
+| 2025 | 240 | 64% | +0.07 | +17.8 | +0.88% |
+| 2026 | 151 | 67% | +0.03 | +4.2 | +2.65% |
+
+exit reasons (0 stop, 2 time, 3 data end, 5 target): {5: 925, 0: 324, 2: 115, 3: 2}
+
+#### Event study, Panel B
+
+| Definition | Events | +1 day | +3 days | +5 days | +10 days | +20 days |
+|---|---|---|---|---|---|---|
+| 5d run >= 100%, 3 up days, >=30% over SMA10 | 1,093 | mean +1.8%, median +7.8%, 64% win, worst -999% | mean +4.3%, median +11.4%, 69% win, worst -1702% | mean +5.6%, median +14.6%, 71% win, worst -1701% | mean +8.9%, median +20.0%, 71% win, worst -1618% | mean +11.2%, median +24.0%, 73% win, worst -1415% |
+| 5d run >= 60% | 2,456 | mean +1.8%, median +4.1%, 61% win, worst -999% | mean +3.5%, median +7.6%, 63% win, worst -1702% | mean +4.2%, median +9.1%, 65% win, worst -1701% | mean +5.7%, median +11.2%, 65% win, worst -1618% | mean +7.1%, median +16.2%, 67% win, worst -2005% |
+| 5d run >= 200% | 326 | mean +5.7%, median +12.1%, 65% win, worst -354% | mean +7.5%, median +16.3%, 73% win, worst -573% | mean +10.9%, median +23.0%, 76% win, worst -675% | mean +19.7%, median +31.1%, 76% win, worst -391% | mean +21.6%, median +36.6%, 78% win, worst -344% |
+| 5d run >= 100%, day $vol >= 50M | 801 | mean +2.0%, median +8.2%, 63% win, worst -999% | mean +4.0%, median +11.4%, 68% win, worst -1702% | mean +5.5%, median +15.0%, 71% win, worst -1701% | mean +9.7%, median +21.2%, 72% win, worst -1618% | mean +12.1%, median +25.8%, 74% win, worst -1415% |
+| 10d run >= 200% | 459 | mean +5.4%, median +10.7%, 68% win, worst -210% | mean +11.8%, median +17.0%, 73% win, worst -200% | mean +15.0%, median +22.3%, 76% win, worst -269% | mean +20.5%, median +29.8%, 75% win, worst -300% | mean +23.1%, median +35.9%, 79% win, worst -344% |
+| 5d run >= 50%, day $vol >= 200M (large/liquid) | 1,106 | mean +2.1%, median +3.9%, 62% win, worst -354% | mean +3.8%, median +6.6%, 64% win, worst -573% | mean +4.5%, median +9.1%, 65% win, worst -581% | mean +6.7%, median +11.7%, 66% win, worst -802% | mean +9.1%, median +17.8%, 69% win, worst -928% |
+
+5d run >= 100% 2005-2012: n=15 5d mean +9.8% med +8.5% win 67%
+
+5d run >= 100% 2013-2018: n=241 5d mean +13.2% med +16.8% win 74%
+
+5d run >= 100% 2019-2021: n=603 5d mean +8.1% med +14.9% win 75%
+
+5d run >= 100% 2022-2026: n=943 5d mean +6.3% med +13.9% win 68%
+
+#### Parabolic-short variants, Panel B
+
+| Variant | Trades | Win rate | Avg R | t (naive) | Avg return | Profit factor | Avg hold (days) | Avg stop distance | Worst trade |
+|---|---|---|---|---|---|---|---|---|---|
+| P-red: first red close after 5d>=100%, stop=run high | 1,103 | 66.5% | +0.055 | +1.9 | +1.54% | 1.18 | 4.4 | 45.6% | -422% |
+| P-red, target SMA20, hold<=20d | 1,103 | 62.0% | +0.038 | +1.1 | +2.58% | 1.10 | 8.2 | 45.6% | -422% |
+| P-red, no target, 5-day time exit | 1,103 | 58.9% | +0.072 | +2.4 | +2.05% | 1.25 | 4.5 | 45.6% | -172% |
+| P-red, run >= 60% | 2,487 | 61.2% | -0.017 | -0.8 | +0.46% | 0.95 | 4.1 | 34.8% | -422% |
+| P-red, run >= 200% | 326 | 69.0% | +0.016 | +0.4 | +0.98% | 1.06 | 4.7 | 58.7% | -163% |
+| P-red, day $vol >= 50M | 804 | 67.4% | +0.033 | +1.1 | +1.38% | 1.12 | 4.6 | 49.9% | -422% |
+| P-red, cost 0, borrow 0 | 1,103 | 69.9% | +0.130 | +4.5 | +3.40% | 1.50 | 4.4 | 45.6% | -417% |
+| P-red, cost 100bp/fill, borrow 100%/yr | 1,103 | 64.1% | -0.021 | -0.7 | -0.32% | 0.94 | 4.4 | 45.6% | -428% |
+| P-red, cost 100bp/fill, borrow 300%/yr | 1,103 | 56.6% | -0.165 | -5.2 | -3.82% | 0.61 | 4.4 | 45.6% | -435% |
+| P-open: short next open, stop +30%, pessimistic | 1,285 | 57.8% | +0.104 | +3.7 | +3.13% | 1.26 | 4.0 | 30.0% | -140% |
+| P-open, stop +50% | 1,215 | 65.3% | +0.047 | +2.2 | +2.34% | 1.16 | 4.7 | 50.0% | -161% |
+| P-open, stop +100% | 1,144 | 71.9% | +0.037 | +3.0 | +3.74% | 1.27 | 5.6 | 100.0% | -161% |
+
+#### Event study, A-window
+
+| Definition | Events | +1 day | +3 days | +5 days | +10 days | +20 days |
+|---|---|---|---|---|---|---|
+| 5d run >= 100%, 3 up days, >=30% over SMA10 | 1,011 | mean +1.8%, median +8.4%, 65% win, worst -999% | mean +3.7%, median +11.8%, 68% win, worst -1702% | mean +5.5%, median +15.6%, 71% win, worst -1701% | mean +9.2%, median +20.4%, 71% win, worst -1618% | mean +10.7%, median +24.8%, 73% win, worst -1415% |
+| 5d run >= 60% | 2,224 | mean +1.5%, median +4.5%, 61% win, worst -999% | mean -1.9%, median +7.7%, 63% win, worst -10039% | mean +3.4%, median +9.4%, 65% win, worst -1701% | mean +5.5%, median +11.7%, 65% win, worst -1618% | mean +6.7%, median +16.6%, 67% win, worst -2005% |
+| 5d run >= 200% | 319 | mean +5.7%, median +13.0%, 65% win, worst -354% | mean +6.5%, median +17.5%, 72% win, worst -573% | mean +9.8%, median +23.2%, 73% win, worst -675% | mean +19.5%, median +31.0%, 74% win, worst -391% | mean +20.1%, median +37.4%, 75% win, worst -344% |
+| 5d run >= 100%, day $vol >= 50M | 749 | mean +2.4%, median +8.6%, 65% win, worst -999% | mean +3.8%, median +11.7%, 68% win, worst -1702% | mean +5.6%, median +16.0%, 71% win, worst -1701% | mean +10.3%, median +22.0%, 72% win, worst -1618% | mean +12.4%, median +26.9%, 74% win, worst -1415% |
+| 10d run >= 200% | 460 | mean +5.6%, median +11.4%, 67% win, worst -292% | mean +11.1%, median +17.7%, 73% win, worst -267% | mean +15.4%, median +23.2%, 76% win, worst -269% | mean +21.9%, median +31.3%, 76% win, worst -300% | mean +24.2%, median +37.6%, 79% win, worst -344% |
+| 5d run >= 50%, day $vol >= 200M (large/liquid) | 1,021 | mean +2.3%, median +5.1%, 63% win, worst -354% | mean -5.8%, median +7.7%, 64% win, worst -10039% | mean +4.7%, median +10.4%, 66% win, worst -581% | mean +7.9%, median +14.1%, 68% win, worst -802% | mean +10.1%, median +19.3%, 70% win, worst -928% |
+
+5d run >= 100% 2005-2012: n=100 5d mean +11.9% med +13.0% win 69%
+
+5d run >= 100% 2013-2018: n=227 5d mean +13.1% med +18.4% win 72%
+
+5d run >= 100% 2019-2021: n=533 5d mean +9.2% med +17.5% win 77%
+
+5d run >= 100% 2022-2026: n=1138 5d mean +7.3% med +15.1% win 68%
+
+#### Parabolic-short variants, A-window
+
+| Variant | Trades | Win rate | Avg R | t (naive) | Avg return | Profit factor | Avg hold (days) | Avg stop distance | Worst trade |
+|---|---|---|---|---|---|---|---|---|---|
+| P-red: first red close after 5d>=100%, stop=run high | 992 | 67.7% | +0.072 | +2.3 | +1.98% | 1.25 | 4.4 | 46.4% | -422% |
+| P-red, target SMA20, hold<=20d | 994 | 63.9% | +0.076 | +2.2 | +3.35% | 1.20 | 8.0 | 46.4% | -422% |
+| P-red, no target, 5-day time exit | 993 | 60.3% | +0.095 | +2.9 | +2.74% | 1.34 | 4.5 | 46.4% | -172% |
+| P-red, run >= 60% | 2,196 | 61.7% | -0.013 | -0.6 | +0.42% | 0.96 | 4.1 | 35.7% | -422% |
+| P-red, run >= 200% | 309 | 69.3% | +0.043 | +0.9 | +1.81% | 1.15 | 4.7 | 58.3% | -119% |
+| P-red, day $vol >= 50M | 732 | 68.4% | +0.048 | +1.6 | +1.72% | 1.17 | 4.6 | 50.6% | -422% |
+| P-red, cost 0, borrow 0 | 993 | 70.5% | +0.140 | +4.5 | +3.84% | 1.54 | 4.4 | 46.4% | -417% |
+| P-red, cost 100bp/fill, borrow 100%/yr | 992 | 65.5% | +0.005 | +0.2 | +0.14% | 1.02 | 4.4 | 46.4% | -428% |
+| P-red, cost 100bp/fill, borrow 300%/yr | 992 | 58.1% | -0.117 | -3.6 | -3.33% | 0.70 | 4.4 | 46.4% | -435% |
+| P-open: short next open, stop +30%, pessimistic | 1,166 | 58.5% | +0.128 | +4.2 | +3.83% | 1.31 | 3.9 | 30.0% | -112% |
+| P-open, stop +50% | 1,104 | 65.7% | +0.050 | +2.2 | +2.49% | 1.17 | 4.6 | 50.0% | -161% |
+| P-open, stop +100% | 1,032 | 73.1% | +0.039 | +2.8 | +3.89% | 1.27 | 5.5 | 100.0% | -303% |
+
+### T5. Portfolio level ($100,000 start, 0.5% risk per trade)
+
+#### Panel A, 2005-01-03 to 2026-11-17
+
+| Strategy | CAGR | Vol | Sharpe | Max drawdown | Final multiple | Trades taken / signals | Avg gross exposure |
+|---|---|---|---|---|---|---|---|
+| Breakout Q0 (regime filter) | -2.6% | 8.1% | -0.50 | -51.8% | 0.56x | 1,478 / 1,478 | 10% |
+| Breakout Q0, no regime filter | -1.9% | 14.5% | -0.18 | -51.3% | 0.66x | 2,691 / 2,694 | 18% |
+| Breakout Q0, entry day worst case | -4.1% | 7.9% | -0.72 | -62.8% | 0.40x | 1,479 / 1,479 | 9% |
+| Breakout Q0, 1% risk, 140% gross | -5.7% | 15.8% | -0.40 | -78.9% | 0.28x | 1,476 / 1,478 | 19% |
+| Earnings EP, close entry, 50-day trail | +4.6% | 16.6% | 0.25 | -37.4% | 2.69x | 1,634 / 2,198 | 55% |
+| Earnings EP, close entry, his 3-5d/10-day rules | -2.8% | 7.7% | -0.56 | -50.5% | 0.54x | 2,097 / 2,215 | 17% |
+| All EPs, close entry, 50-day trail | +2.3% | 25.2% | 0.14 | -66.1% | 1.65x | 2,608 / 4,482 | 71% |
+| Earnings EP 50-day trail, $100,000 account, <=1% of ADV | +4.6% | 16.7% | 0.25 | -37.5% | 2.70x | 1,701 / 2,198 | 55% |
+| Earnings EP 50-day trail, $1,000,000 account, <=1% of ADV | +7.2% | 15.6% | 0.41 | -36.8% | 4.62x | 1,847 / 2,198 | 49% |
+| Earnings EP 50-day trail, $10,000,000 account, <=1% of ADV | +6.6% | 11.4% | 0.46 | -26.1% | 4.02x | 1,891 / 2,198 | 27% |
+| Earnings EP 50-day trail, $100,000,000 account, <=1% of ADV | +3.1% | 5.8% | 0.25 | -11.4% | 1.95x | 1,024 / 2,198 | 8% |
+| Parabolic short (next open, +30% stop), 50bp/fill, 50% borrow | +5.4% | 5.1% | 0.72 | -8.5% | 3.18x | 1,600 / 1,609 | 2% |
+| Parabolic short, 100bp/fill, 150% borrow | +2.5% | 5.0% | 0.16 | -15.6% | 1.71x | 1,600 / 1,609 | 2% |
+| SPY buy & hold (total return) | +10.6% | 18.9% | 0.54 | -55.2% | 9.05x | 0 / 0 | 100% |
+| QQQ buy & hold (total return, to 2026-09-11) | +15.1% | 21.6% | 0.68 | -53.4% | 21.27x | 0 / 0 | 100% |
+
+Calendar-year returns, Panel A, 2005-01-03 to 2026-11-17 (%):
+
+| Year | Breakout Q0 (regime filter) | Breakout Q0, no regime filter | Earnings EP, close entry, 50-day trail | Earnings EP, close entry, his 3-5d/10-day rules | Parabolic short (next open, +30% stop), 50bp/fill, 50% borrow | SPY buy & hold (total return) | QQQ buy & hold (total return, to 2026-09-11) |
+|---|---|---|---|---|---|---|---|
+| 2005 | +1.3 | -8.0 | +31.6 | +2.6 | +0.3 | +5.3 | +2.6 |
+| 2006 | +0.4 | -4.2 | +6.4 | -1.0 | +0.6 | +15.8 | +7.1 |
+| 2007 | -1.8 | -4.8 | +9.0 | -2.4 | +0.4 | +5.1 | +19.0 |
+| 2008 | -2.0 | -5.4 | -11.1 | -6.6 | +2.8 | -36.8 | -41.7 |
+| 2009 | -1.5 | +7.2 | +6.8 | -2.8 | +2.3 | +26.4 | +54.7 |
+| 2010 | +10.7 | +18.3 | +13.5 | -1.9 | +2.3 | +15.1 | +20.1 |
+| 2011 | -3.7 | -2.8 | -1.9 | -2.6 | +1.6 | +1.9 | +3.5 |
+| 2012 | +0.2 | -1.9 | +4.2 | +3.4 | +2.8 | +16.0 | +18.1 |
+| 2013 | +9.6 | +13.4 | +19.0 | -4.9 | -0.8 | +32.3 | +36.6 |
+| 2014 | -6.1 | -7.3 | -4.6 | -2.6 | +3.7 | +13.5 | +19.2 |
+| 2015 | -4.3 | -5.1 | -20.0 | -9.6 | +2.3 | +1.3 | +9.4 |
+| 2016 | +5.1 | +16.2 | +16.8 | +5.0 | +6.6 | +12.0 | +7.1 |
+| 2017 | -11.1 | -6.1 | +5.0 | +3.1 | +6.5 | +21.7 | +32.7 |
+| 2018 | -4.9 | +1.0 | +9.9 | -7.8 | +6.2 | -4.6 | -0.1 |
+| 2019 | -5.1 | -1.1 | +9.1 | -5.6 | +3.1 | +31.2 | +39.0 |
+| 2020 | +9.2 | +15.4 | +18.9 | -9.3 | +32.8 | +18.4 | +48.4 |
+| 2021 | -9.7 | -10.9 | +4.3 | -0.3 | +9.3 | +28.7 | +27.4 |
+| 2022 | -12.0 | -20.1 | -23.8 | -5.4 | +2.7 | -18.2 | -32.6 |
+| 2023 | -6.7 | -5.3 | +40.1 | +9.0 | -0.3 | +26.2 | +54.9 |
+| 2024 | -15.0 | -14.3 | +0.0 | +6.6 | +7.4 | +24.9 | +25.6 |
+| 2025 | +4.8 | +2.7 | -14.6 | -6.5 | +24.3 | +17.7 | +20.8 |
+| 2026 | -8.3 | -7.0 | +6.1 | -17.2 | +7.9 | +8.2 | n/a |
+
+Factor regression, Earnings EP, close entry, 50-day trail (2005-01-04..2026-09-30, n=5469): alpha +0.4%/yr (t=+0.1) | Mkt +0.39 (t=+38.2) | SMB +0.44 (t=+23.1) | HML -0.08 (t=-4.7) | MOM +0.08 (t=+6.9) | R2 0.31
+
+Factor regression, Breakout Q0 (regime filter) (2005-01-04..2026-09-30, n=5469): alpha -4.5%/yr (t=-2.7) | Mkt +0.06 (t=+10.3) | SMB +0.14 (t=+12.9) | HML -0.01 (t=-0.9) | MOM -0.00 (t=-0.4) | R2 0.06
+
+#### Panel B, 2019-07-01 to 2026-01-28
+
+| Strategy | CAGR | Vol | Sharpe | Max drawdown | Final multiple | Trades taken / signals | Avg gross exposure |
+|---|---|---|---|---|---|---|---|
+| Breakout Q0 (regime filter) | -3.5% | 11.7% | -0.49 | -45.0% | 0.79x | 735 / 735 | 12% |
+| Breakout Q0, no regime filter | -4.7% | 22.4% | -0.24 | -54.6% | 0.73x | 1,171 / 1,174 | 20% |
+| Breakout Q0, entry day worst case | -5.5% | 11.5% | -0.69 | -48.6% | 0.69x | 735 / 735 | 12% |
+| Breakout Q0, 1% risk, 140% gross | -7.7% | 23.0% | -0.36 | -70.2% | 0.59x | 735 / 735 | 25% |
+| Earnings EP, close entry, 50-day trail | +4.4% | 20.6% | 0.18 | -33.4% | 1.33x | 755 / 1,215 | 74% |
+| Earnings EP, close entry, his 3-5d/10-day rules | +0.8% | 12.1% | -0.11 | -26.3% | 1.06x | 1,125 / 1,226 | 29% |
+| All EPs, close entry, 50-day trail | +5.1% | 28.1% | 0.22 | -46.1% | 1.39x | 1,243 / 2,898 | 92% |
+| Earnings EP 50-day trail, $100,000 account, <=1% of ADV | +4.3% | 20.6% | 0.17 | -33.7% | 1.32x | 812 / 1,215 | 74% |
+| Earnings EP 50-day trail, $1,000,000 account, <=1% of ADV | +6.8% | 20.6% | 0.29 | -33.1% | 1.54x | 863 / 1,215 | 71% |
+| Earnings EP 50-day trail, $10,000,000 account, <=1% of ADV | +14.8% | 17.1% | 0.73 | -29.8% | 2.49x | 1,019 / 1,215 | 51% |
+| Earnings EP 50-day trail, $100,000,000 account, <=1% of ADV | +5.5% | 7.6% | 0.37 | -11.5% | 1.42x | 595 / 1,215 | 15% |
+| Parabolic short (next open, +30% stop), 50bp/fill, 50% borrow | +9.3% | 8.2% | 0.78 | -13.5% | 1.79x | 1,266 / 1,285 | 5% |
+| Parabolic short, 100bp/fill, 150% borrow | +1.1% | 8.2% | -0.17 | -23.6% | 1.08x | 1,266 / 1,285 | 5% |
+| SPY buy & hold (total return) | +15.6% | 20.1% | 0.68 | -33.7% | 2.59x | 0 / 0 | 100% |
+| QQQ buy & hold (total return) | +20.8% | 24.5% | 0.78 | -35.2% | 3.48x | 0 / 0 | 100% |
+
+Calendar-year returns, Panel B, 2019-07-01 to 2026-01-28 (%):
+
+| Year | Breakout Q0 (regime filter) | Breakout Q0, no regime filter | Earnings EP, close entry, 50-day trail | Earnings EP, close entry, his 3-5d/10-day rules | Parabolic short (next open, +30% stop), 50bp/fill, 50% borrow | SPY buy & hold (total return) | QQQ buy & hold (total return) |
+|---|---|---|---|---|---|---|---|
+| 2019 | +7.1 | +6.3 | -5.6 | +5.4 | -2.0 | +9.9 | +12.8 |
+| 2020 | +5.7 | +10.6 | +30.1 | -5.2 | +40.1 | +18.4 | +48.4 |
+| 2021 | -8.0 | -13.6 | +3.9 | -3.5 | +3.5 | +28.7 | +27.4 |
+| 2022 | -14.2 | -24.0 | -24.9 | -5.8 | +4.2 | -18.2 | -32.7 |
+| 2023 | -5.0 | -4.2 | +55.9 | +20.1 | -6.4 | +26.2 | +54.9 |
+| 2024 | -14.4 | -14.7 | -1.7 | +5.3 | +2.8 | +24.9 | +25.6 |
+| 2025 | +10.0 | +10.0 | -15.8 | -8.0 | +22.9 | +17.7 | +20.8 |
+| 2026 | -1.0 | +4.9 | +7.5 | -0.3 | +2.3 | +2.0 | +3.1 |
+
+Factor regression, Earnings EP, close entry, 50-day trail (2019-07-02..2026-01-28, n=1653): alpha -1.1%/yr (t=-0.2) | Mkt +0.42 (t=+20.8) | SMB +0.57 (t=+15.5) | HML -0.11 (t=-4.1) | MOM +0.07 (t=+3.1) | R2 0.36
+
+Factor regression, Breakout Q0 (regime filter) (2019-07-02..2026-01-28, n=1653): alpha -6.1%/yr (t=-1.4) | Mkt +0.07 (t=+5.0) | SMB +0.22 (t=+8.7) | HML -0.00 (t=-0.2) | MOM -0.02 (t=-1.4) | R2 0.08
+
+### T6. Month-clustered significance
+
+#### Panel A
+
+| Setup | Trades | Avg R | t naive | t month-clustered | Avg return | t of return, clustered |
+|---|---|---|---|---|---|---|
+| Breakout Q0 | 1,478 | -0.070 | -1.9 | -1.6 | -0.51% | -1.3 |
+| Breakout close-confirmed | 918 | -0.210 | -4.0 | -3.8 | -1.19% | -2.7 |
+| EP close entry, standard rules | 4,538 | -0.111 | -5.2 | -3.6 | -1.19% | -4.2 |
+| Earnings EP, standard rules | 2,215 | -0.052 | -1.9 | -1.4 | -0.24% | -1.0 |
+| Earnings EP, 50-day trail | 2,198 | +0.248 | +3.1 | +2.5 | +1.21% | +2.1 |
+| Parabolic short, next open, +30% stop | 1,609 | +0.147 | +5.7 | +5.1 | +4.42% | +5.1 |
+| Parabolic short, first red day | 1,366 | +0.072 | +2.8 | +2.3 | +1.97% | +2.2 |
+
+#### Panel B
+
+| Setup | Trades | Avg R | t naive | t month-clustered | Avg return | t of return, clustered |
+|---|---|---|---|---|---|---|
+| Breakout Q0 | 735 | -0.054 | -0.9 | -0.7 | -0.31% | -0.4 |
+| Breakout close-confirmed | 436 | -0.121 | -1.5 | -1.5 | -0.82% | -1.0 |
+| EP close entry, standard rules | 2,937 | -0.075 | -2.5 | -1.8 | -1.03% | -2.7 |
+| Earnings EP, standard rules | 1,226 | +0.029 | +0.7 | +0.5 | +0.19% | +0.5 |
+| Earnings EP, 50-day trail | 1,215 | +0.330 | +3.0 | +2.1 | +1.57% | +1.7 |
+| Parabolic short, next open, +30% stop | 1,285 | +0.104 | +3.7 | +2.8 | +3.13% | +2.8 |
+| Parabolic short, first red day | 1,103 | +0.055 | +1.9 | +1.4 | +1.54% | +1.4 |

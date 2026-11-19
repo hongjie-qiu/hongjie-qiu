@@ -117,7 +117,7 @@ def breakout_signals(p, f, top=0.02, adr_min=0.04, min_cons=5, max_cons=40, max_
         if max_ext_adr is not None:
             # his rule: do not buy a stock that is already up more than ~1x ADR on the day
             trig &= entry <= prevC * (1.0 + max_ext_adr * adrp)
-        stop = entry * (1.0 - stop_adr * adrp)
+        stop = entry * (1.0 - np.minimum(stop_adr * adrp, 0.5))
     else:
         trig &= (C > pivot) & (C >= O)
         entry = C.copy()
@@ -198,11 +198,11 @@ def ep_signals(p, f, gap_min=0.10, vol_mult=3.0, dv_day_min=10e6, price_min=3.0,
         trig &= (r126 >= neglect[0]) & (r126 <= neglect[1])
     if mode == "open":
         entry = O.copy()
-        stop = entry * (1.0 - stop_adr * adrp)
+        stop = entry * (1.0 - np.minimum(stop_adr * adrp, 0.5))   # never further than 50% away
     elif mode == "orb":
         entry = O * (1.0 + orb_k * adrp)
         trig &= H >= entry
-        stop = O * (1.0 - orb_k * adrp)
+        stop = O * (1.0 - np.minimum(orb_k * adrp, 0.5))
     else:
         with np.errstate(divide="ignore", invalid="ignore"):
             pos = (C - L) / (H - L)
@@ -225,7 +225,8 @@ def parabolic_signals(p, f, run_days=5, run_min=1.0, up_days=3, ext_sma10=0.3, d
     that day's dollar volume >= dv_min.
       mode='next_open' : short the next open, stop = entry x (1 + naive_stop)
       mode='first_red' : within `wait_days` after s, the first day that closes below both its open and
-                         the prior close; short that close, stop = the highest high since s (plus buffer)
+                         the prior close; short that close, stop = the highest high since s (plus buffer),
+                         bounded to 5%-100% above the entry
     """
     O, H, L, C = (_a(p[k]) for k in ("open", "high", "low", "close"))
     V = _a(p["volume"])
@@ -270,7 +271,8 @@ def parabolic_signals(p, f, run_days=5, run_min=1.0, up_days=3, ext_sma10=0.3, d
                 if key not in seen:
                     seen.add(key)
                     rows.append(d); cols.append(j); ent.append(c)
-                    stp.append(top * (1.0 + stop_buffer)); rr.append(run[s, j])
+                    # stop = high of the run, kept between 5% and 100% above the entry so that R stays meaningful
+                    stp.append(min(max(top * (1.0 + stop_buffer), c * 1.05), c * 2.0)); rr.append(run[s, j])
                 break
             if para[d, j]:
                 break  # still going parabolic: a later signal day takes over

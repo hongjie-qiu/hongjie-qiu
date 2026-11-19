@@ -34,6 +34,9 @@ O, H, L, C, V, R = (np.asarray(p[k]) for k in ("open", "high", "low", "close", "
 T, S = C.shape
 dates = p["dates"]
 spy = C[:, p["col"]["SPY"]].astype(np.float64)
+for _i in range(1, len(spy)):          # sessions the delisting-inclusive file lacks: carry SPY forward
+    if not np.isfinite(spy[_i]):
+        spy[_i] = spy[_i - 1]
 E = SUR = None
 if a.sec:
     E, info = reaction_matrix_sec(p, a.sec, a.ident, a.current)
@@ -126,13 +129,14 @@ variants = [
     ("E-close, volume >= 5x", dict(mode="close", vol_mult=5.0), {}, True),
     ("E-close, cost 0", dict(mode="close"), {"cost": 0.0}, True),
     ("E-close, cost 30 bp", dict(mode="close"), {"cost": 0.003}, True),
-    ("E-open: buy the open, 1xADR stop, day0 close-based", dict(mode="open", stop_adr=1.0), {}, False),
-    ("E-open, day0 pessimistic", dict(mode="open", stop_adr=1.0), {"day0_mode": 1}, False),
-    ("E-open, 1.5xADR stop, day0 pessimistic", dict(mode="open", stop_adr=1.5), {"day0_mode": 1}, False),
-    ("E-open, earnings only, day0 pessimistic", dict(mode="open", stop_adr=1.0, earnings=E, require_earnings=True), {"day0_mode": 1}, False),
-    ("E-orb proxy: buy open+0.25ADR, stop open-0.25ADR, pess.", dict(mode="orb", orb_k=0.25), {"day0_mode": 1}, False),
-    ("E-orb proxy, day0 close-based", dict(mode="orb", orb_k=0.25), {"day0_mode": 2}, False),
-    ("E-orb proxy, day0 optimistic", dict(mode="orb", orb_k=0.25), {"day0_mode": 0}, False),
+    # a fill at the open is exact on daily bars: the whole day's range follows the fill
+    ("E-open: buy the open, 1xADR stop (exact)", dict(mode="open", stop_adr=1.0), {}, False),
+    ("E-open, 1.5xADR stop (exact)", dict(mode="open", stop_adr=1.5), {}, False),
+    ("E-open, earnings only (exact)", dict(mode="open", stop_adr=1.0, earnings=E, require_earnings=True), {}, False),
+    # the opening-range proxy fills after the open, so the entry day is ambiguous: three assumptions
+    ("E-orb proxy: buy open+0.25ADR, stop open-0.25ADR, worst case", dict(mode="orb", orb_k=0.25), {"day0_mode": 1}, False),
+    ("E-orb proxy, close-based (optimistic bound)", dict(mode="orb", orb_k=0.25), {"day0_mode": 2}, False),
+    ("E-orb proxy, entry-day low ignored", dict(mode="orb", orb_k=0.25), {"day0_mode": 0}, False),
 ]
 rows = []
 keep = {}
@@ -152,7 +156,7 @@ for name, so, to, at_close in variants:
     print("    by era avgR: " + "  ".join(f"{a}-{b}: {s[f'avgR_{a}_{b}']:+.3f} (n={s[f'n_{a}_{b}']})" for a, b in ERAS))
 pd.DataFrame(rows).to_csv(os.path.join(out_dir, f"ep_variants{sfx}.csv"), index=False)
 cols = ["date", "symbol", "entry", "stop", "exit_date", "ret", "R", "hold", "reason", "gap", "volx", "adr"]
-for key, tag in ((variants[0][0], "Eclose"), (variants[4][0], "Eclose_earn_sma20"), (variants[14][0], "Eopen_pess")):
+for key, tag in ((variants[0][0], "Eclose"), (variants[4][0], "Eclose_earn_sma20"), ("E-open: buy the open, 1xADR stop (exact)", "Eopen")):
     if key in keep:
         by_year(keep[key]).to_csv(os.path.join(out_dir, f"ep_by_year_{tag}{sfx}.csv"), index=False)
         keep[key][cols].to_csv(os.path.join(out_dir, f"ep_trades_{tag}{sfx}.csv"), index=False)

@@ -19,11 +19,13 @@ def bars(rows):
 def run_long(rows, ma, t0, entry, stop, **kw):
     O, H, L, C = bars(rows)
     MA = np.array(ma, dtype=np.float32).reshape(-1, 1)
-    args = dict(at_close=False, day0_mode=1, part_day=3, part_frac=0.0, be_after_part=True, max_hold=250, cost=0.0)
+    args = dict(at_close=False, day0_mode=1, part_day=3, part_frac=0.0, be_after_part=True, max_hold=250, cost=0.0,
+                exact0=False)
     args.update(kw)
     return simulate_longs(O, H, L, C, MA, np.array([t0]), np.array([0]), np.array([float(entry)]),
                           np.array([float(stop)]), args["at_close"], args["day0_mode"], args["part_day"],
-                          args["part_frac"], args["be_after_part"], args["max_hold"], args["cost"])
+                          args["part_frac"], args["be_after_part"], args["max_hold"], args["cost"],
+                          np.array([args["exact0"]]))
 
 
 def approx(a, b, tol=1e-6):
@@ -87,15 +89,26 @@ ex, pd_, ppx, fpx, ret, r, why, hold, mfe = run_long(rows, [0] * 14, 0, 100, 95)
 assert why[0] == 3 and ex[0] == 1
 approx(fpx[0], 102)
 
+# 8b) a fill AT THE OPEN has no entry-day ambiguity: the low comes after the fill, so even the
+#     "close-based" and "ignore" modes must stop the trade when the day's low reaches the stop
+rows = [(100, 101, 94, 100.5), (101, 110, 100, 109)]
+for mode in (0, 1, 2):
+    ex, pd_, ppx, fpx, ret, r, why, hold, mfe = run_long(rows, [0, 0], 0, 100, 95, day0_mode=mode, exact0=True)
+    assert why[0] == 4 and ex[0] == 0, (mode, why, ex)
+    approx(r[0], -1.0)
+#     the same bars with a later intraday fill (not at the open) stay ambiguous: mode 2 keeps the trade
+ex, pd_, ppx, fpx, ret, r, why, hold, mfe = run_long(rows, [0, 0], 0, 100, 95, day0_mode=2, exact0=False)
+assert why[0] == 3
+
 # ---- shorts
 def run_short(rows, ma, t0, entry, stop, **kw):
     O, H, L, C = bars(rows)
     MA = np.array(ma, dtype=np.float32).reshape(-1, 1)
-    args = dict(at_close=True, day0_mode=1, use_target=True, max_hold=10, cost=0.0, borrow_daily=0.0)
+    args = dict(at_close=True, day0_mode=1, use_target=True, max_hold=10, cost=0.0, borrow_daily=0.0, exact0=False)
     args.update(kw)
     return simulate_shorts(O, H, L, C, MA, np.array([t0]), np.array([0]), np.array([float(entry)]),
                            np.array([float(stop)]), args["at_close"], args["day0_mode"], args["use_target"],
-                           args["max_hold"], args["cost"], args["borrow_daily"])
+                           args["max_hold"], args["cost"], args["borrow_daily"], np.array([args["exact0"]]))
 
 # 9) short 100 at close, stop 110, target = previous day's MA (80): day 2 low 78 -> cover at 80 (+2R)
 rows = [(105, 108, 99, 100), (98, 99, 90, 91), (90, 91, 78, 79)]
@@ -132,4 +145,12 @@ approx(eq[3], 101_000)
 tr_s = dict(tr); tr_s["stop"] = np.array([105.0])
 eq, taken, g = portfolio_sim(tr_s, C, dates, start_equity=100_000, risk_pct=0.01, max_pos_w=0.5, cost=0.0, direction=-1)
 approx(eq[3], 98_000)
+# ---- twin detection must not merge different companies that were stopped out on the same day
+import pandas as pd
+from qm.run import _drop_twins
+Cx = np.array([[10, 20, 30], [11, 21, 33], [12, 23, 37], [9, 17, 27]], dtype=np.float32)
+df = pd.DataFrame({"t0": [2, 2, 2], "j": [0, 1, 2], "exit_day": [3, 3, 3], "ret": [-0.3, -0.3, -0.3]})
+assert len(_drop_twins(df, Cx)) == 3          # same outcome, different price paths -> all kept
+Cy = Cx.copy(); Cy[:, 1] = Cx[:, 0] * 7.0      # column 1 is column 0 listed under another ticker and scale
+assert len(_drop_twins(df, Cy)) == 2          # the true duplicate is dropped
 print("all simulator tests passed")

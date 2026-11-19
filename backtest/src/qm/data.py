@@ -205,9 +205,11 @@ def compute_features(p, cache_dir=None, price_min=3.0, dv_min=3e6):
     O = np.asarray(p["open"]); H = np.asarray(p["high"]); L = np.asarray(p["low"])
     C = np.asarray(p["close"]); V = np.asarray(p["volume"]); R = np.asarray(p["rawclose"])
     f = {}
-    f["sma10"] = rolling_mean(C, 10, 10)
-    f["sma20"] = rolling_mean(C, 20, 20)
-    f["sma50"] = rolling_mean(C, 50, 50)
+    # averages over the valid closes in the window; a few missing bars (halts, vendor holes) must not
+    # blank the average for the next n rows, which would silently switch off trailing exits
+    f["sma10"] = rolling_mean(C, 10, 8)
+    f["sma20"] = rolling_mean(C, 20, 16)
+    f["sma50"] = rolling_mean(C, 50, 40)
     with np.errstate(divide="ignore", invalid="ignore"):
         hl = (H / L - 1.0).astype(np.float32)
         dv = (C.astype(np.float64) * V.astype(np.float64)).astype(np.float32)

@@ -15,7 +15,8 @@ def long_trades(p, f, sig, at_close, day0_mode=1, part_day=3, part_frac=1 / 3, b
     O, H, L, C = (_arr(p, k) for k in ("open", "high", "low", "close"))
     MA = np.asarray(f[trail])
     res = simulate_longs(O, H, L, C, MA, sig["t0"], sig["j"], sig["entry"], sig["stop"], at_close,
-                         day0_mode, part_day, part_frac, be_after_part, max_hold, cost)
+                         day0_mode, part_day, part_frac, be_after_part, max_hold, cost,
+                         _open_fill(O, sig, at_close))
     exit_day, part_dayo, part_px, final_px, ret, rmult, reason, hold, mfe = res
     keep = np.isfinite(rmult)
     if dedupe:
@@ -29,7 +30,7 @@ def long_trades(p, f, sig, at_close, day0_mode=1, part_day=3, part_frac=1 / 3, b
         if k not in df.columns:
             df[k] = v
     df["part_frac"] = part_frac
-    df = _drop_twins(df[keep])
+    df = _drop_twins(df[keep], C)
     df["date"] = p["dates"][df["t0"].values]
     df["exit_date"] = p["dates"][df["exit_day"].values]
     df["symbol"] = [p["symbols"][j] for j in df["j"].values]
@@ -43,7 +44,8 @@ def short_trades(p, f, sig, at_close=True, day0_mode=1, use_target=True, target=
     O, H, L, C = (_arr(p, k) for k in ("open", "high", "low", "close"))
     MA = np.asarray(f[target])
     res = simulate_shorts(O, H, L, C, MA, sig["t0"], sig["j"], sig["entry"], sig["stop"], at_close,
-                          day0_mode, use_target, max_hold, cost, borrow_annual / 252.0)
+                          day0_mode, use_target, max_hold, cost, borrow_annual / 252.0,
+                          _open_fill(O, sig, at_close))
     exit_day, final_px, ret, rmult, reason, hold = res
     keep = np.isfinite(rmult)
     if dedupe:
@@ -55,7 +57,7 @@ def short_trades(p, f, sig, at_close=True, day0_mode=1, use_target=True, target=
     for k, v in sig.items():
         if k not in df.columns:
             df[k] = v
-    df = _drop_twins(df[keep])
+    df = _drop_twins(df[keep], C)
     df["date"] = p["dates"][df["t0"].values]
     df["exit_date"] = p["dates"][df["exit_day"].values]
     df["symbol"] = [p["symbols"][j] for j in df["j"].values]
@@ -64,9 +66,33 @@ def short_trades(p, f, sig, at_close=True, day0_mode=1, use_target=True, target=
     return df
 
 
-def _drop_twins(df):
-    """Remove trades that are bar-for-bar copies of another trade (one company listed under two tickers)."""
-    key = pd.DataFrame({"t0": df["t0"], "x": df["exit_day"], "r": df["ret"].round(6)})
+def _open_fill(O, sig, at_close):
+    """True where an intraday fill happened exactly at the open (no entry-day ambiguity)."""
+    n = len(sig["t0"])
+    if at_close or n == 0:
+        return np.zeros(n, dtype=np.bool_)
+    o = O[sig["t0"], sig["j"]].astype(np.float64)
+    return np.isclose(sig["entry"], o, rtol=1e-6, atol=0.0)
+
+
+def _drop_twins(df, C):
+    """Remove trades that duplicate another trade because one company is listed under two tickers.
+
+    Two trades are twins only if they share entry day, exit day and return AND the stock's own
+    close-to-close path into the entry (the two daily changes before the fill) is identical.  The
+    path test matters: with a fixed-percentage stop, different companies stopped out on the same day
+    have identical returns, and must not be mistaken for duplicates.
+    """
+    if len(df) == 0:
+        return df.reset_index(drop=True)
+    t0 = df["t0"].values.astype(np.int64)
+    j = df["j"].values.astype(np.int64)
+    a = np.maximum(t0 - 1, 0)
+    b = np.maximum(t0 - 2, 0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        r1 = np.round(np.nan_to_num(C[t0, j].astype(np.float64) / C[a, j], nan=-1.0), 4)
+        r2 = np.round(np.nan_to_num(C[a, j].astype(np.float64) / C[b, j], nan=-1.0), 4)
+    key = pd.DataFrame({"t0": t0, "x": df["exit_day"].values, "r": df["ret"].round(6).values, "r1": r1, "r2": r2})
     return df[~key.duplicated(keep="first").values].reset_index(drop=True)
 
 

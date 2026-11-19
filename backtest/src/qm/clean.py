@@ -2,18 +2,37 @@
 import numpy as np
 
 
-def repair_scaling_glitches(O, H, L, C, V, min_ratio=5.0, max_bars=10):
-    """Repair vendor scaling errors in place.
+def _snap(r):
+    """Snap an observed jump to the nearest whole split ratio (1:5, 1:10, ...) when it is close.
 
-    Signature of a misdated or missing (reverse-)split adjustment: the close jumps by a factor
-    r >= min_ratio while share volume falls by about the same factor, i.e. dollar volume stays
-    roughly continuous.  A genuine price spike shows the opposite (volume explodes).
-      * if the jump reverses within `max_bars` bars, the bars in between are blanked;
-      * otherwise every earlier bar is rescaled as if a split had been missed.
-    Returns (n_blanked, n_rescaled, [(row, col)], [(row, col, ratio)]).
+    The close-to-close jump across a reverse split is (split ratio) x (1 + that day's real return);
+    rescaling by the snapped ratio keeps the real return instead of erasing it.
     """
+    k = float(round(r))
+    if k >= 2 and abs(np.log(r / k)) < np.log(1.25):
+        return k
+    return float(r)
+
+
+def repair_scaling_glitches(O, H, L, C, V, split_events=None, min_ratio=5.0, max_bars=10, near=30):
+    """Repair vendor scaling errors in place, conservatively.
+
+    Candidate: the close jumps by a factor r >= min_ratio while share volume falls by about the same
+    factor (dollar volume roughly continuous).  That alone is not proof - a genuine squeeze can show
+    it too (TOP Financial, April 2023) - so a repair needs corroboration:
+      * `split_events[col]` = [(row, price_factor)] lists recorded splits, price_factor being the jump
+        the as-traded price makes at the split (10 for a 1:10 reverse split).  A recorded split within
+        `near` rows whose factor matches r marks the jump as a misdated/missing adjustment;
+      * without one, a jump that does NOT reverse is still treated as a missed reverse split when share
+        volume stays lower for the following ten bars (a squeeze has the opposite volume signature).
+    Jump that reverses within `max_bars` bars + matching recorded split -> the bars in between are
+    blanked (adjustment applied on the wrong dates).  Jump that does not reverse + corroboration ->
+    earlier bars are rescaled by the recorded (or snapped) ratio.  Everything else is left alone.
+    Returns (n_blanked, n_rescaled, n_left_alone, [(row, col)], [(row, col, ratio)]).
+    """
+    split_events = split_events or {}
     n_s = C.shape[1]
-    blanked = rescaled_n = 0
+    blanked = rescaled_n = left = 0
     at = []
     rescaled = []
     for j in range(n_s):
@@ -29,23 +48,36 @@ def repair_scaling_glitches(O, H, L, C, V, min_ratio=5.0, max_bars=10):
             r = C[b, j] / C[a, j] if np.isfinite(C[a, j]) and np.isfinite(C[b, j]) else np.nan
             if not np.isfinite(r) or r < min_ratio or not (vv[k] > 0) or vv[k + 1] / vv[k] > 2.0 / r:
                 continue
+            ev = [pf for (row, pf) in split_events.get(j, ()) if abs(row - b) <= near and pf > 0
+                  and abs(np.log(r / pf)) < np.log(1.5)]
             end = None
             for m in range(k + 1, min(k + 1 + max_bars, len(idx) - 1)):
                 if cv[m + 1] / cv[m] <= 2.0 / r:
                     end = idx[m + 1]
                     break
             if end is not None:
-                for a_ in (O, H, L, C, V):
-                    a_[b:end, j] = np.nan
-                blanked += 1
-            else:
+                if ev:
+                    for a_ in (O, H, L, C, V):
+                        a_[b:end, j] = np.nan
+                    blanked += 1
+                    at.append((b, j))
+                else:
+                    left += 1
+                continue
+            before = vv[max(0, k - 9):k + 1]
+            after = vv[k + 1:k + 11]
+            persistent = len(after) >= 5 and np.median(after) <= (2.0 / r) * np.median(before)
+            if ev or persistent:
+                use = float(ev[0]) if ev else _snap(r)
                 for a_ in (O, H, L, C):
-                    a_[:b, j] *= r
-                V[:b, j] /= r
+                    a_[:b, j] *= use
+                V[:b, j] /= use
                 rescaled_n += 1
-                rescaled.append((b, j, r))
-            at.append((b, j))
-    return blanked, rescaled_n, at, rescaled
+                rescaled.append((b, j, use))
+                at.append((b, j))
+            else:
+                left += 1
+    return blanked, rescaled_n, left, at, rescaled
 
 
 def clean_bars(O, H, L, C, V):

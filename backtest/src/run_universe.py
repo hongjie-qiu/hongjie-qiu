@@ -21,6 +21,9 @@ O, H, L, C = (np.asarray(p[k]) for k in ("open", "high", "low", "close"))
 T, S = C.shape
 dates = p["dates"]
 spy = C[:, p["col"]["SPY"]].astype(np.float64)
+for _i in range(1, len(spy)):          # sessions the delisting-inclusive file lacks: carry SPY forward
+    if not np.isfinite(spy[_i]):
+        spy[_i] = spy[_i - 1]
 yr = dates.astype("datetime64[Y]").astype(int) + 1970
 i0 = int(np.searchsorted(dates, np.datetime64(START)))
 i1 = T if END is None else int(np.searchsorted(dates, np.datetime64(END), side="right"))

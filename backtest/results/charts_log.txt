@@ -1,0 +1,7 @@
+== charts
+findfont: Failed to find font weight normal for WenQuanYi Zen Hei, now using 500.
+findfont: Failed to find font weight normal for WenQuanYi Zen Hei, now using 500.
+findfont: Failed to find font weight bold for WenQuanYi Zen Hei, now using 500.
+findfont: Failed to find font weight normal for WenQuanYi Zen Hei, now using 500.
+findfont: Failed to find font weight normal for WenQuanYi Zen Hei, now using 500.
+figures written to /home/user/hongjie-qiu/backtest/../reports/figures ['fig1_equity.png', 'fig3_short_costs.png', 'fig2_intraday_assumption.png']
