@@ -33,7 +33,7 @@ impossible entry-day assumption) disappeared.
    breakeven stop they averaged +0.25R (t = 3.1 naive, 2.5 clustered by month), positive in all four eras - but
    the portfolio made 4.6% a year against 10.6% for SPY, with zero factor alpha.
 4. **Parabolic shorts carry the only strong mechanical signal - and the worst practical problems.** Shorting
-   the open after a >= 100% five-day run made a median +15.8% in five days (71% winners) in every era. After
+   the open after a >= 100% five-day run made a median +15.8% in five days (71% winners), with a positive result in all four eras. After
    50 bp per fill and 50% annual borrow, a version with a hard +30% stop earned +0.15R, about +4.4% of the
    position per trade (t = 5.7 naive, 5.1 clustered); at 100 bp and 100-300% borrow the edge is zero to negative.
    Real squeezes of +500% to +3,900% within days are in the sample.
@@ -226,8 +226,8 @@ Earnings EP with 20-day trail by year (avg R): 2005 +0.48, 2006 -0.18, 2007 -0.0
 
 Anatomy of the one profitable variant (earnings gaps, close entry, 50-day trail; the 1,634 trades the portfolio run
 actually took) [D]: total +322R, of which the 20 best trades made +410R - without them the rule is net negative.
-67% of trades were roughly full 1R losses, 5.5% made 5R or more, 2.3% made 10R or more. The big winners are the
-textbook cases from his own model book: NVDA May 2016 (+136% over 197 sessions, +43.8R), LULU Sep 2010 (+125%),
+67% of trades were roughly full 1R losses, 5.5% made 5R or more, 2.3% made 10R or more. The big winners are
+textbook-style cases of this approach: NVDA May 2016 (+136% over 197 sessions, +43.8R), LULU Sep 2010 (+125%),
 TSLA Oct 2019 (+119%), AMZN Apr 2007, FSLR Feb 2007, TWLO Feb 2018, AXON Feb 2018, MRVL Mar 2026. In the standard
 short-term version the largest winners include APT, the mask maker he names as a February 2020 EP (+155% in ten
 sessions, +10.9R).
@@ -256,8 +256,8 @@ Event study - profit of a short opened at the next open after a parabolic close,
 | 5-day gain >= 60% | 3,093 | +2.3% / +4.7% / 62% | +4.4% / +9.4% / 65% | +6.4% / +12.2% / 66% | +8.0% / +16.7% / 67% | -1,701% |
 | 5-day gain >= 50% with >= $200M traded (liquid names) | 1,311 | +2.6% / +4.4% / 62% | +4.6% / +8.7% / 65% | +8.1% / +12.8% / 67% | +10.1% / +17.8% / 69% | -581% |
 
-The short side worked in every era (trade table below: +0.32R, +0.26R, +0.20R, +0.09R). The number of qualifying
-trades exploded: about 10-40 a year before 2019, 184 in 2020, 240 in 2025 (first-red-day version).
+The short side worked in every era (trade table below: +0.32R, +0.25R, +0.20R, +0.09R). The number of qualifying
+trades exploded: 4 to 40 a year before 2019, 184 in 2020, 240 in 2025 (first-red-day version).
 
 Trade results:
 
@@ -438,7 +438,8 @@ What it found wrong, and the fix:
 Not verified by the audit: vendor prices against a third source; a full independent rebuild of either panel; borrow
 fees, slippage and anything needing intraday data. The re-run after the fixes was not itself re-audited; the unit
 tests (now including the two logic fixes) pass, and the direction and rough size of every change matches what the
-auditor measured.
+auditor measured. (The "vs" figures in the table are the auditor's own single-fix measurements on the first
+version; the re-run applies all fixes together, so its values differ slightly - e.g. +0.147R and +0.330R.)
 
 ---
 
