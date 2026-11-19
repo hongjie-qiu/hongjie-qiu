@@ -1,0 +1,100 @@
+Q0 baseline: pivot stop-entry, 1xADR stop, regime on n=   710  win= 42.5%  avgR=-0.066  medR=-0.51  avgW=+1.08R  avgL=-0.91R  PF=0.87  t=-1.1  avgRet=-0.42%  top5%=-375%  hold=5.4d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.009 (n=313)  2022-2026: -0.125 (n=397)
+Q0 day0 pessimistic (day low <= stop => out) n=   710  win= 40.1%  avgR=-0.110  medR=-0.62  avgW=+1.10R  avgL=-0.92R  PF=0.80  t=-1.8  avgRet=-0.79%  top5%=-222%  hold=5.1d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.047 (n=313)  2022-2026: -0.159 (n=397)
+Q0 day0 optimistic (day-0 low ignored) n=   710  win= 42.5%  avgR=-0.074  medR=-0.51  avgW=+1.08R  avgL=-0.93R  PF=0.86  t=-1.2  avgRet=-0.51%  top5%=-335%  hold=5.5d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.000 (n=313)  2022-2026: -0.132 (n=397)
+C0 close-confirmed entry, LOD stop, regime on n=   425  win= 39.5%  avgR=-0.147  medR=-1.02  avgW=+1.24R  avgL=-1.05R  PF=0.77  t=-1.8  avgRet=-0.99%  top5%=-167%  hold=4.9d  risk=8.6%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.138 (n=196)  2022-2026: -0.155 (n=229)
+Q0 no regime filter                n=  1146  win= 42.9%  avgR=-0.071  medR=-0.44  avgW=+1.00R  avgL=-0.88R  PF=0.86  t=-1.6  avgRet=-0.62%  top5%=-317%  hold=5.4d  risk=10.4%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.009 (n=450)  2022-2026: -0.111 (n=696)
+Q0 regime = 10>20 only (not 'both rising') n=   854  win= 42.0%  avgR=-0.093  medR=-0.51  avgW=+1.03R  avgL=-0.90R  PF=0.82  t=-1.8  avgRet=-0.67%  top5%=-247%  hold=5.4d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.015 (n=363)  2022-2026: -0.151 (n=491)
+C0 no regime filter                n=   701  win= 40.1%  avgR=-0.145  medR=-1.02  avgW=+1.17R  avgL=-1.02R  PF=0.76  t=-2.3  avgRet=-0.86%  top5%=-176%  hold=4.9d  risk=8.2%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.073 (n=280)  2022-2026: -0.193 (n=421)
+Q0 top 1% leaders                  n=   363  win= 42.7%  avgR=-0.121  medR=-0.48  avgW=+0.93R  avgL=-0.90R  PF=0.77  t=-1.5  avgRet=-0.78%  top5%=-192%  hold=5.4d  risk=12.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.042 (n=160)  2022-2026: -0.183 (n=203)
+Q0 top 7% leaders (his TC2000 cut-off) n=  2033  win= 41.9%  avgR=-0.079  medR=-0.49  avgW=+1.08R  avgL=-0.91R  PF=0.85  t=-2.4  avgRet=-0.34%  top5%=-293%  hold=5.5d  risk=8.0%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.025 (n=887)  2022-2026: -0.159 (n=1146)
+Q0 momentum = point-to-point 1/3/6m return n=   839  win= 42.9%  avgR=-0.039  medR=-0.50  avgW=+1.12R  avgL=-0.91R  PF=0.93  t=-0.7  avgRet=-0.24%  top5%=-669%  hold=5.7d  risk=10.0%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.116 (n=356)  2022-2026: -0.153 (n=483)
+Q0 ADR >= 6%                       n=   615  win= 42.8%  avgR=-0.050  medR=-0.50  avgW=+1.10R  avgL=-0.91R  PF=0.90  t=-0.7  avgRet=-0.34%  top5%=-522%  hold=5.4d  risk=11.6%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.031 (n=267)  2022-2026: -0.113 (n=348)
+Q0 dollar volume >= $20M           n=   336  win= 45.5%  avgR=+0.035  medR=-0.28  avgW=+1.19R  avgL=-0.93R  PF=1.07  t=+0.4  avgRet=+0.85%  top5%=742%  hold=5.8d  risk=10.9%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.094 (n=155)  2022-2026: -0.016 (n=181)
+Q0 consolidation 10-40 days        n=   270  win= 38.5%  avgR=-0.101  medR=-0.72  avgW=+1.22R  avgL=-0.93R  PF=0.82  t=-1.0  avgRet=-0.80%  top5%=-271%  hold=5.2d  risk=11.4%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.046 (n=128)  2022-2026: -0.232 (n=142)
+Q0 depth <= 3 ADR                  n=   635  win= 42.5%  avgR=-0.084  medR=-0.50  avgW=+1.03R  avgL=-0.91R  PF=0.84  t=-1.3  avgRet=-0.69%  top5%=-275%  hold=5.5d  risk=11.0%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.043 (n=277)  2022-2026: -0.116 (n=358)
+Q0 no tightness filter             n=  1070  win= 43.9%  avgR=-0.004  medR=-0.49  avgW=+1.18R  avgL=-0.93R  PF=0.99  t=-0.1  avgRet=+0.24%  top5%=-7576%  hold=5.5d  risk=10.4%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.047 (n=473)  2022-2026: -0.044 (n=597)
+Q0 + volume dry-up in base         n=   502  win= 40.0%  avgR=-0.143  medR=-0.59  avgW=+0.99R  avgL=-0.90R  PF=0.74  t=-2.2  avgRet=-1.27%  top5%=-157%  hold=5.1d  risk=10.5%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.026 (n=230)  2022-2026: -0.242 (n=272)
+Q0 no '1xADR extension' skip       n=   848  win= 43.9%  avgR=-0.007  medR=-0.49  avgW=+1.15R  avgL=-0.91R  PF=0.99  t=-0.1  avgRet=+0.13%  top5%=-3724%  hold=5.5d  risk=10.8%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.056 (n=380)  2022-2026: -0.058 (n=468)
+Q0 stop 0.5 ADR                    n=   715  win= 31.2%  avgR=-0.022  medR=-1.05  avgW=+2.40R  avgL=-1.12R  PF=0.97  t=-0.2  avgRet=-0.02%  top5%=-2120%  hold=3.8d  risk=5.4%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.131 (n=315)  2022-2026: -0.142 (n=400)
+Q0 stop 1.5 ADR                    n=   705  win= 45.1%  avgR=-0.055  medR=-0.19  avgW=+0.70R  avgL=-0.68R  PF=0.85  t=-1.3  avgRet=-0.47%  top5%=-307%  hold=6.0d  risk=16.1%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.023 (n=312)  2022-2026: -0.081 (n=393)
+Q0 no partial                      n=   706  win= 27.3%  avgR=-0.082  medR=-0.74  avgW=+2.02R  avgL=-0.87R  PF=0.87  t=-1.0  avgRet=-0.54%  top5%=-403%  hold=6.2d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.014 (n=310)  2022-2026: -0.157 (n=396)
+Q0 partial 1/2                     n=   710  win= 43.1%  avgR=-0.068  medR=-0.51  avgW=+1.05R  avgL=-0.91R  PF=0.87  t=-1.3  avgRet=-0.43%  top5%=-321%  hold=5.4d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.003 (n=313)  2022-2026: -0.120 (n=397)
+Q0 no breakeven stop               n=   706  win= 30.9%  avgR=-0.078  medR=-0.59  avgW=+1.59R  avgL=-0.82R  PF=0.86  t=-1.2  avgRet=-0.51%  top5%=-329%  hold=6.2d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.001 (n=310)  2022-2026: -0.140 (n=396)
+Q0 trail SMA20                     n=   694  win= 44.5%  avgR=-0.074  medR=-0.68  avgW=+1.06R  avgL=-0.98R  PF=0.86  t=-1.1  avgRet=-0.56%  top5%=-394%  hold=7.3d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.021 (n=306)  2022-2026: -0.149 (n=388)
+Q0 cost 0 bp per fill              n=   710  win= 44.4%  avgR=-0.032  medR=-0.48  avgW=+1.07R  avgL=-0.91R  PF=0.94  t=-0.5  avgRet=-0.12%  top5%=-771%  hold=5.4d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.043 (n=313)  2022-2026: -0.092 (n=397)
+Q0 cost 5 bp per fill              n=   710  win= 43.9%  avgR=-0.044  medR=-0.49  avgW=+1.07R  avgL=-0.91R  PF=0.91  t=-0.7  avgRet=-0.22%  top5%=-571%  hold=5.4d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: +0.031 (n=313)  2022-2026: -0.103 (n=397)
+Q0 cost 30 bp per fill             n=   710  win= 39.6%  avgR=-0.100  medR=-0.55  avgW=+1.12R  avgL=-0.90R  PF=0.82  t=-1.6  avgRet=-0.72%  top5%=-246%  hold=5.4d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.025 (n=313)  2022-2026: -0.159 (n=397)
+Q0 cost 50 bp per fill             n=   710  win= 34.6%  avgR=-0.145  medR=-0.59  avgW=+1.23R  avgL=-0.87R  PF=0.75  t=-2.4  avgRet=-1.12%  top5%=-168%  hold=5.4d  risk=10.7%
+    by era avgR: 2005-2012: +nan (n=0)  2013-2018: +nan (n=0)  2019-2021: -0.071 (n=313)  2022-2026: -0.204 (n=397)
+
+Control - random entry at the open in trending leaders, regime on, same exits (20 seeds):
+  n per run ~1137 | avgR mean -0.015 (min -0.099, max +0.046) | win 39.8% | avgRet -0.11%
+
+Q0 by year:
+ year   n   win   avgR    sumR  avg_ret    pf
+ 2019  47 0.489  0.213  10.013    0.020 1.515
+ 2020 140 0.429  0.052   7.304    0.009 1.098
+ 2021 126 0.381 -0.116 -14.574   -0.004 0.790
+ 2022  63 0.317 -0.422 -26.580   -0.035 0.300
+ 2023 107 0.458 -0.143 -15.312   -0.011 0.698
+ 2024 129 0.395 -0.227 -29.336   -0.028 0.600
+ 2025  96 0.531  0.245  23.532    0.028 1.524
+ 2026   2 0.000 -1.020  -2.040   -0.161 0.000
+
+Q0 without regime filter, by year:
+ year   n   win   avgR    sumR  avg_ret    pf
+ 2019  77 0.468  0.065   5.009    0.008 1.135
+ 2020 182 0.440  0.111  20.251    0.009 1.222
+ 2021 191 0.393 -0.153 -29.267   -0.012 0.719
+ 2022 179 0.369 -0.306 -54.829   -0.025 0.417
+ 2023 159 0.447 -0.172 -27.337   -0.013 0.634
+ 2024 185 0.405 -0.157 -29.060   -0.019 0.712
+ 2025 157 0.510  0.154  24.130    0.015 1.357
+ 2026  16 0.562  0.593   9.495    0.033 2.582
+
+Q0 profit concentration: sum R = -47.0 | top 10 trades = 88.9 | top 1% (7 trades) = 70.9 | all others = -117.9
+exit reasons (0 stop, 1 trail, 2 time, 3 data end, 4 day-0 stop): {0: 440, 1: 250, 4: 16, 3: 4}
+regime-on share of days: strict 0.53, loose 0.70
+top 15 Q0 trades:
+      date symbol     entry      stop  exit_date      ret         R  hold
+2024-02-08   VKTX 25.750000 23.811541 2024-03-08 1.369580 18.220436    20
+2019-11-29   FTSV 12.700000 11.387590 2020-01-02 1.435988 13.916697    22
+2021-01-12     EH 29.120001 25.376450 2021-02-01 1.209251  9.420519    13
+2020-06-19   NVAX 63.279999 56.469223 2020-08-12 0.962183  8.953205    37
+2023-11-27   AFRM 27.160000 25.292122 2024-01-03 0.502481  7.317322    25
+2020-07-20   BGFV  3.360000  3.009897 2020-08-18 0.682445  6.559381    21
+2025-06-05   PTHL  7.310000  5.894404 2025-06-26 1.251784  6.473791    14
+2020-05-28    SSL  5.200000  4.777885 2020-06-12 0.510845  6.302510    11
+2020-12-10    DAC 15.950000 14.522848 2021-01-22 0.537491  6.016071    28
+2025-05-06   AEVA  8.120000  7.247637 2025-05-22 0.615835  5.740821    12
+2020-07-16   KIRK  3.700000  3.018078 2020-08-26 1.016464  5.523445    29
+2020-07-22    TUP  7.980000  7.103642 2020-08-11 0.566721  5.168233    14
+2021-01-12   GEVO  5.150000  4.295412 2021-02-01 0.790091  4.768463    13
+2025-09-15   OKLO 85.349998 79.271996 2025-09-29 0.329612  4.635499    10
+2023-12-01   SRRK 13.150000 12.144132 2023-12-21 0.322010  4.216048    14

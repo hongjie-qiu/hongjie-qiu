@@ -1,0 +1,8 @@
+backtest/data/
+__pycache__/
+*.pyc
+*.nbi
+*.nbc
+# large, fully reproducible dumps
+backtest/results/ep_events*.csv
+backtest/results/ep_trades_Eopen*.csv

@@ -1,0 +1,17 @@
+=== /home/user/hongjie-qiu/backtest/data/panel_hf  2005-01-03..2026-11-17 : 20-day forward return minus SPY, equal-weighted across names each day ===
+liquid universe (price>=$3, $vol>=3M)         2005-2026: -0.07% (t=-0.5) | 2005-2012: +0.37% (t=+1.8) | 2013-2018: -0.13% (t=-0.7) | 2019-2021: -0.30% (t=-0.5) | 2022-2026: -0.58% (t=-1.7)
+  ... with ADR >= 4%                           2005-2026: -0.21% (t=-0.7) | 2005-2012: +0.29% (t=+0.6) | 2013-2018: -0.20% (t=-0.4) | 2019-2021: -0.46% (t=-0.4) | 2022-2026: -0.96% (t=-1.5)
+LEADERS: top 2% on any horizon, ADR >= 4%      2005-2026: -1.13% (t=-2.4) | 2005-2012: -0.06% (t=-0.1) | 2013-2018: -0.68% (t=-0.9) | 2019-2021: -0.93% (t=-0.5) | 2022-2026: -3.62% (t=-3.4)
+  top 2% by 1-month gain, ADR >= 4%             2005-2026: -1.75% (t=-3.1) | 2005-2012: -0.06% (t=-0.1) | 2013-2018: -1.20% (t=-1.4) | 2019-2021: -2.21% (t=-1.2) | 2022-2026: -5.24% (t=-4.2)
+  top 2% by 3-month gain, ADR >= 4%             2005-2026: -1.49% (t=-2.6) | 2005-2012: -0.15% (t=-0.2) | 2013-2018: -1.12% (t=-1.3) | 2019-2021: -1.17% (t=-0.6) | 2022-2026: -4.49% (t=-3.4)
+  top 2% by 6-month gain, ADR >= 4%             2005-2026: -1.32% (t=-2.4) | 2005-2012: -0.15% (t=-0.2) | 2013-2018: -0.80% (t=-0.9) | 2019-2021: -0.69% (t=-0.3) | 2022-2026: -4.32% (t=-3.3)
+top 7% on any horizon, ADR >= 4%               2005-2026: -0.42% (t=-1.1) | 2005-2012: +0.24% (t=+0.5) | 2013-2018: -0.30% (t=-0.5) | 2019-2021: -0.54% (t=-0.4) | 2022-2026: -1.69% (t=-2.2)
+academic 12-2 momentum, top decile             2005-2026: +0.16% (t=+0.5) | 2005-2012: +0.29% (t=+0.7) | 2013-2018: +0.10% (t=+0.2) | 2019-2021: +0.37% (t=+0.3) | 2022-2026: -0.14% (t=-0.2)
+academic 12-2 momentum, bottom decile          2005-2026: -0.33% (t=-0.8) | 2005-2012: +0.53% (t=+0.8) | 2013-2018: -0.60% (t=-1.2) | 2019-2021: -0.24% (t=-0.2) | 2022-2026: -1.53% (t=-1.9)
+leaders 5-day forward                          2005-2026: -0.40% (t=-3.2) | 2005-2012: -0.03% (t=-0.2) | 2013-2018: -0.20% (t=-1.1) | 2019-2021: -0.43% (t=-1.0) | 2022-2026: -1.21% (t=-4.2)
+leaders 60-day forward                         2005-2026: -1.45% (t=-1.0) | 2005-2012: +0.63% (t=+0.4) | 2013-2018: -0.76% (t=-0.3) | 2019-2021: -0.41% (t=-0.1) | 2022-2026: -7.04% (t=-2.2)
+breakout stop-entries (regime on) n=1504: entry->same-day close mean +0.50% median +0.13% up 51% | entry->+1d minus SPY +0.14% (med -0.36%) | entry->+5d minus SPY -0.37% (med -1.09%) | entry->+20d minus SPY -1.18% (med -2.95%) | day-0 low: median -4.2% below entry; <= entry-1ADR on 9% of days, <= entry-0.5ADR on 62%
+  close-confirmed breakouts (regime on) n=929: close->+1d minus SPY -0.16% (med -0.50%) | close->+5d minus SPY -0.66% (med -1.16%) | close->+20d minus SPY -1.97% (med -2.75%) |
+breakout stop-entries (no regime filter) n=2757: entry->same-day close mean +0.34% median +0.11% up 51% | entry->+1d minus SPY +0.03% (med -0.34%) | entry->+5d minus SPY -0.26% (med -0.87%) | entry->+20d minus SPY -1.46% (med -2.90%) | day-0 low: median -4.1% below entry; <= entry-1ADR on 9% of days, <= entry-0.5ADR on 63%
+  close-confirmed breakouts (no regime filter) n=1733: close->+1d minus SPY -0.11% (med -0.35%) | close->+5d minus SPY -0.03% (med -0.93%) | close->+20d minus SPY -2.25% (med -3.12%) |
+avg number of leaders per day: 63 | base universe: 1967
